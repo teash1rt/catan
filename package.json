@@ -1,0 +1,38 @@
+{
+  "name": "catan",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Catan game monorepo",
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r --if-present build",
+    "dev": "pnpm -r --parallel --if-present dev",
+    "lint": "oxlint . --deny-warnings",
+    "lint:fix": "oxlint . --fix --deny-warnings",
+    "test": "pnpm -r --if-present test",
+    "typecheck": "tsc --noEmit --project tsconfig.json && pnpm -r --if-present typecheck"
+  },
+  "engines": {
+    "node": ">=24.18.0 <25"
+  },
+  "packageManager": "pnpm@10.34.0",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "10.34.0",
+      "onFail": "download"
+    },
+    "runtime": {
+      "name": "node",
+      "version": "24.18.0",
+      "onFail": "download"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "26.6.4",
+    "oxlint": "1.87.0",
+    "oxlint-tsgolint": "7.0.2003",
+    "typescript": "7.0.2"
+  }
+}
