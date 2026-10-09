@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "build": "pnpm -r --if-present build",
-    "dev": "pnpm -r --parallel --if-present dev",
+    "dev": "pnpm --filter @catan/desktop dev",
     "lint": "oxlint . --deny-warnings",
     "lint:fix": "oxlint . --fix --deny-warnings",
     "test": "pnpm -r --if-present test",
