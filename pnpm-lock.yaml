@@ -26,6 +26,9 @@ importers:
 
   apps/desktop:
     dependencies:
+      '@catan/game-core':
+        specifier: workspace:*
+        version: link:../../packages/game-core
       '@catan/protocol':
         specifier: workspace:*
         version: link:../../packages/protocol
@@ -88,7 +91,11 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
 
-  packages/game-core: {}
+  packages/game-core:
+    dependencies:
+      '@catan/protocol':
+        specifier: workspace:*
+        version: link:../protocol
 
   packages/protocol:
     dependencies:

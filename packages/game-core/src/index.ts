@@ -1,1 +1,1 @@
-export const packageName = "@catan/game-core";
+export * from "./map.js";

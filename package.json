@@ -10,8 +10,8 @@
     "dev": "pnpm --filter @catan/desktop dev",
     "lint": "oxlint . --deny-warnings",
     "lint:fix": "oxlint . --fix --deny-warnings",
-    "test": "pnpm -r --if-present test",
-    "typecheck": "tsc --noEmit --project tsconfig.json && pnpm -r --if-present typecheck"
+    "test": "pnpm --filter @catan/protocol build && pnpm -r --if-present test",
+    "typecheck": "pnpm --filter @catan/protocol build && pnpm --filter @catan/game-core build && tsc --noEmit --project tsconfig.json && pnpm -r --if-present typecheck"
   },
   "engines": {
     "node": ">=24.18.0 <25"

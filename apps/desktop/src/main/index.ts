@@ -6,8 +6,14 @@ const currentDirectory = dirname(fileURLToPath(import.meta.url));
 
 function createWindow(): void {
   const window = new BrowserWindow({
+    width: 1440,
+    height: 1000,
+    minWidth: 960,
+    minHeight: 680,
+    backgroundColor: "#102c35",
+    title: "Catan · 岛屿工坊",
     webPreferences: {
-      preload: join(currentDirectory, "../preload/index.mjs"),
+      preload: join(currentDirectory, "../preload/index.cjs"),
       sandbox: true,
     },
   });

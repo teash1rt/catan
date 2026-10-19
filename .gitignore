@@ -12,3 +12,6 @@ coverage/
 
 .DS_Store
 *.log
+*.blend1
+*.blend2
+__pycache__/
