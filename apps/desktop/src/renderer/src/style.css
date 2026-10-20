@@ -1,34 +1,195 @@
-:root { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; color: #e5e4d6; background: #326c7b; font-synthesis: none; }
-* { box-sizing: border-box; }
-body { margin: 0; overflow: hidden; }
-button, input { font: inherit; }
-button { cursor: pointer; border: 1px solid #ffffff25; color: inherit; background: #ffffff0b; border-radius: 6px; transition: background .18s; }
-button:hover { background: #ffffff18; }
-button:focus-visible, input:focus-visible { outline: 2px solid #e9c889; outline-offset: 3px; }
-button:disabled { opacity: .5; cursor: wait; }
-.app, .map-panel { position: absolute; inset: 0; overflow: hidden; }
-.map-panel { background: #326c7b; }
-.map-panel>div:has(canvas) { position: absolute!important; inset: 0; }
-.debug-panel { position: absolute; top: 18px; right: 18px; width: 246px; max-width: calc(100vw - 36px); max-height: calc(100vh - 36px); overflow-y: auto; z-index: 4; border: 1px solid #ffffff24; border-radius: 10px; background: #122f37e8; box-shadow: 0 8px 28px #0002; backdrop-filter: blur(12px); font-size: 12px; }
-.debug-panel.collapsed { width: 86px; }
-.debug-toggle { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 12px 14px; border: 0; border-radius: 9px; background: transparent; color: #dec89c; font-weight: 600; }
-#debug-controls { padding: 0 14px 14px; }
-.debug-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.debug-actions button { padding: 9px 5px; font-size: 11px; }
-.primary { background: #dfc28a; color: #283834; border-color: #ecd8ad; font-weight: 600; }
-.primary:hover { background: #f0d9a9; }
-.piece-toggle { display: flex; align-items: center; gap: 7px; margin-top: 15px; color: #c1d0c7; cursor: pointer; }
-.piece-toggle input { margin: 0; accent-color: #d6b77b; }
-.swatches { display: flex; gap: 13px; margin: 13px 0 0 3px; }
-.swatches button { width: 23px; height: 23px; border-radius: 50%; padding: 0; }
-.swatches button[aria-pressed=true] { outline: 1px solid #e1d6b5; outline-offset: 3px; }
-.debug-stats { margin: 16px 0 0; padding-top: 10px; border-top: 1px solid #ffffff17; font-size: 10px; color: #95ada8; }
-.debug-stats div { display: flex; justify-content: space-between; gap: 8px; margin: 6px 0; }
-.debug-stats dd { margin: 0; color: #bdcbc0; font-variant-numeric: tabular-nums; }
-.controls-hint { margin: 12px 0 0; color: #829d98; font-size: 10px; }
-.loading { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #214e5a; z-index: 3; text-align: center; padding: 30px; }
-.loading h2 { font-size: 21px; font-weight: 500; }
-.loading p { max-width: 600px; color: #a6c2c3; font-size: 12px; overflow-wrap: anywhere; }
-.loading button { padding: 10px 20px; }
-.notice { position: absolute; bottom: 20px; left: 20px; max-width: calc(100% - 40px); padding: 14px; background: #73382ee8; border-radius: 5px; font-size: 12px; overflow-wrap: anywhere; }
-@media (max-width: 700px) { .debug-panel { top: 10px; right: 10px; width: 220px; } }
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #e5e4d6;
+  background: #326c7b;
+  font-synthesis: none;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  overflow: hidden;
+}
+button,
+input {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+  border: 1px solid #ffffff25;
+  color: inherit;
+  background: #ffffff0b;
+  border-radius: 6px;
+  transition: background 0.18s;
+}
+button:hover {
+  background: #ffffff18;
+}
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #e9c889;
+  outline-offset: 3px;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.app,
+.map-panel {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.map-panel {
+  background: #326c7b;
+}
+.map-panel > div:has(canvas) {
+  position: absolute !important;
+  inset: 0;
+}
+.debug-panel {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 246px;
+  max-width: calc(100vw - 36px);
+  max-height: calc(100vh - 36px);
+  overflow-y: auto;
+  z-index: 4;
+  border: 1px solid #ffffff24;
+  border-radius: 10px;
+  background: #122f37e8;
+  box-shadow: 0 8px 28px #0002;
+  backdrop-filter: blur(12px);
+  font-size: 12px;
+}
+.debug-panel.collapsed {
+  width: 86px;
+}
+.debug-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #dec89c;
+  font-weight: 600;
+}
+#debug-controls {
+  padding: 0 14px 14px;
+}
+.debug-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.debug-actions button {
+  padding: 9px 5px;
+  font-size: 11px;
+}
+.primary {
+  background: #dfc28a;
+  color: #283834;
+  border-color: #ecd8ad;
+  font-weight: 600;
+}
+.primary:hover {
+  background: #f0d9a9;
+}
+.piece-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 15px;
+  color: #c1d0c7;
+  cursor: pointer;
+}
+.piece-toggle input {
+  margin: 0;
+  accent-color: #d6b77b;
+}
+.swatches {
+  display: flex;
+  gap: 13px;
+  margin: 13px 0 0 3px;
+}
+.swatches button {
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  padding: 0;
+}
+.swatches button[aria-pressed="true"] {
+  outline: 1px solid #e1d6b5;
+  outline-offset: 3px;
+}
+.debug-stats {
+  margin: 16px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid #ffffff17;
+  font-size: 10px;
+  color: #95ada8;
+}
+.debug-stats div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 6px 0;
+}
+.debug-stats dd {
+  margin: 0;
+  color: #bdcbc0;
+  font-variant-numeric: tabular-nums;
+}
+.controls-hint {
+  margin: 12px 0 0;
+  color: #829d98;
+  font-size: 10px;
+}
+.loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #214e5a;
+  z-index: 3;
+  text-align: center;
+  padding: 30px;
+}
+.loading h2 {
+  font-size: 21px;
+  font-weight: 500;
+}
+.loading p {
+  max-width: 600px;
+  color: #a6c2c3;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.loading button {
+  padding: 10px 20px;
+}
+.notice {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  max-width: calc(100% - 40px);
+  padding: 14px;
+  background: #73382ee8;
+  border-radius: 5px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .debug-panel {
+    top: 10px;
+    right: 10px;
+    width: 220px;
+  }
+}

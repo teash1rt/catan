@@ -10,4 +10,8 @@ if (rootElement === null) {
   throw new Error("Missing root element");
 }
 
-createRoot(rootElement).render(<StrictMode><App /></StrictMode>);
+createRoot(rootElement).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);

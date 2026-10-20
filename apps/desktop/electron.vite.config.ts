@@ -10,13 +10,23 @@ export default defineConfig(({ command }) => ({
     build: { rollupOptions: { output: { format: "cjs", entryFileNames: "index.cjs" } } },
   },
   renderer: {
-    plugins: [react(), {
-      name: "local-renderer-csp",
-      transformIndexHtml() {
-        return [{ tag: "meta", attrs: { "http-equiv": "Content-Security-Policy",
-          content: `default-src 'self'; script-src 'self'${command === "serve" ? " 'unsafe-inline'" : ""}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' data: blob:${command === "serve" ? " ws://localhost:*" : ""}; object-src 'none'; base-uri 'self'`,
-        }, injectTo: "head-prepend" }];
+    plugins: [
+      react(),
+      {
+        name: "local-renderer-csp",
+        transformIndexHtml() {
+          return [
+            {
+              tag: "meta",
+              attrs: {
+                "http-equiv": "Content-Security-Policy",
+                content: `default-src 'self'; script-src 'self'${command === "serve" ? " 'unsafe-inline'" : ""}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' data: blob:${command === "serve" ? " ws://localhost:*" : ""}; object-src 'none'; base-uri 'self'`,
+              },
+              injectTo: "head-prepend",
+            },
+          ];
+        },
       },
-    }],
+    ],
   },
 }));

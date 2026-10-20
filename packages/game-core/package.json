@@ -14,5 +14,7 @@
     "typecheck": "tsc --noEmit --project tsconfig.json",
     "test": "pnpm build && node --test tests/*.test.mjs"
   },
-  "dependencies": { "@catan/protocol": "workspace:*" }
+  "dependencies": {
+    "@catan/protocol": "workspace:*"
+  }
 }

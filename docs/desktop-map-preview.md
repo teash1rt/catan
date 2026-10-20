@@ -12,15 +12,15 @@
 
 ## 代码边界
 
-| 位置 | 责任 |
-| --- | --- |
-| `packages/protocol/src/index.ts` | 地图配置的共享类型与 Zod 边界校验；无模型链接 |
-| `packages/game-core/src/map.ts` | 整数格点拓扑、经典配置、种子驱动的确定性生成；无 Three.js |
-| `apps/desktop/src/renderer/src/board/layout.ts` | 布局转模型变换、海岸/港口装配与占地检查 |
-| `board/assets.ts` | 从根目录 `assets/*/model.glb` 获取资产，目录名映射至 Vite 打包 URL；缓存 GLB，不打包同目录的 `.blend` |
-| `board/assembly.ts` / `numbers.ts` | 挂点、玩家材质隔离、实例化、动态数字 |
-| `board/camera.ts` | 策略游戏镜头：输入目标、地面投影、时间相关缓动、边界与事件清理 |
-| `BoardScene.tsx` / `App.tsx` | 光照、镜头、UI；不硬编码资源/数字分配规则 |
+| 位置                                            | 责任                                                                                                  |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `packages/protocol/src/index.ts`                | 地图配置的共享类型与 Zod 边界校验；无模型链接                                                         |
+| `packages/game-core/src/map.ts`                 | 整数格点拓扑、经典配置、种子驱动的确定性生成；无 Three.js                                             |
+| `apps/desktop/src/renderer/src/board/layout.ts` | 布局转模型变换、海岸/港口装配与占地检查                                                               |
+| `board/assets.ts`                               | 从根目录 `assets/*/model.glb` 获取资产，目录名映射至 Vite 打包 URL；缓存 GLB，不打包同目录的 `.blend` |
+| `board/assembly.ts` / `numbers.ts`              | 挂点、玩家材质隔离、实例化、动态数字                                                                  |
+| `board/camera.ts`                               | 策略游戏镜头：输入目标、地面投影、时间相关缓动、边界与事件清理                                        |
+| `BoardScene.tsx` / `App.tsx`                    | 光照、镜头、UI；不硬编码资源/数字分配规则                                                             |
 
 模型遵循[现有契约](modular-asset-plan.md)，不再做 Z-up 补旋转。重复网格按几何体＋材质分批实例化；共享资源跨刷新保留。替换布局时**先从场景移除旧对象，再释放实例缓冲和数字纹理**，避免旧帧重新上传已释放资源。空闲按需渲染。
 

@@ -4,9 +4,6 @@
   "compilerOptions": {
     "noEmit": true
   },
-  "include": [
-    "oxlint.config.ts",
-    "types/**/*.d.ts"
-  ],
+  "include": ["oxlint.config.ts", "types/**/*.d.ts"],
   "exclude": ["node_modules", "dist", "build", "coverage"]
 }
