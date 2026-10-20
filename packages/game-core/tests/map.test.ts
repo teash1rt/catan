@@ -7,7 +7,7 @@ import {
   CLASSIC_RULES,
   orderedCoast,
   validateMapConfig,
-} from "../dist/index.js";
+} from "@catan/game-core";
 
 const sorted = (values: readonly number[]) => values.toSorted((a, b) => a - b);
 void test("classic topology has 19 cells, 72 unique edges, 54 vertices and 30 coastal edges", () => {

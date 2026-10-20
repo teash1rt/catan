@@ -1,12 +1,14 @@
 import { defineConfig, externalizeDepsPlugin } from "electron-vite";
 import react from "@vitejs/plugin-react";
 
+const sourcePackages = ["@catan/game-core", "@catan/protocol"];
+
 export default defineConfig(({ command }) => ({
   main: {
-    plugins: [externalizeDepsPlugin()],
+    plugins: [externalizeDepsPlugin({ exclude: sourcePackages })],
   },
   preload: {
-    plugins: [externalizeDepsPlugin()],
+    plugins: [externalizeDepsPlugin({ exclude: sourcePackages })],
     build: { rollupOptions: { output: { format: "cjs", entryFileNames: "index.cjs" } } },
   },
   renderer: {

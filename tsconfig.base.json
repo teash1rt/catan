@@ -11,6 +11,8 @@
     "exactOptionalPropertyTypes": true,
     "useDefineForClassFields": true,
     "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

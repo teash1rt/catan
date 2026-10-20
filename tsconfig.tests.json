@@ -4,8 +4,6 @@
   "compilerOptions": {
     "lib": ["ES2024", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
-    "allowImportingTsExtensions": true,
-    "erasableSyntaxOnly": true,
     "noEmit": true
   },
   "include": ["apps/*/tests/**/*.test.ts", "packages/*/tests/**/*.test.ts"]

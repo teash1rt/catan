@@ -4,6 +4,12 @@
 
 构建面向 Windows 和 macOS 的 3D 卡坦岛桌面游戏，支持多人实时联机对战与可配置游戏规则。
 
+## 文档职责
+
+- `README.md` 面向玩家，介绍游戏、当前可用内容、操作方式及发布信息。
+- 架构约束、工程约定、开发环境和命令统一维护在 `AGENTS.md`；专题设计与验收记录放在 `docs/`。
+- 区分已实现内容与开发目标，不把规划中的功能描述为已经可用。
+
 ## 核心技术栈
 
 - 桌面端：Electron、React。
@@ -27,8 +33,17 @@
 - `apps/server`：认证接口、Colyseus 房间和数据库访问。
 - `packages/game-core`：确定性游戏规则、`RuleConfig` 和状态转换。
 - `packages/protocol`：共享命令、状态、事件及其 Zod schema。
+- `assets`：Blender 源文件（`.blend`）与运行时模型（`.glb`），使用 Git LFS 管理。
+- `docs`：资产规范、专题设计、验收记录和开发计划。
 
 不要把游戏规则放入渲染组件、Electron 主进程或数据库访问层。
+
+## 共享包消费方式
+
+- `@catan/protocol` 和 `@catan/game-core` 通过包名直接导出并消费 TypeScript 源码，不生成 `dist`，不设置预构建步骤或单独的 watch 任务。
+- 桌面渲染端由 Vite 编译共享源码并处理热更新；Electron 主进程和 preload 将这两个包纳入打包，不将它们作为运行时外部依赖。
+- 测试和服务端使用 Node.js 24 直接运行 TypeScript 源码。共享包只使用可擦除的 TypeScript 语法，相对导入写明 `.ts` 扩展名。
+- 类型检查与测试不得依赖已有构建产物；`pnpm build` 当前仅构建桌面应用。
 
 ## 本地启动
 
@@ -36,6 +51,19 @@
 - 首次在新环境运行项目时，先执行 `./bootstrap.sh` 完成依赖和 Electron 初始化。
 - 当前优先完成 Blender 建模和桌面端 3D 场景，执行 `pnpm dev` 仅启动桌面端。
 - 服务端脚手架暂时保留，但在登录与匹配阶段开始前不接入默认开发流程。
+
+## 常用命令
+
+| 命令                                | 说明                                     |
+| ----------------------------------- | ---------------------------------------- |
+| `./bootstrap.sh`                    | 首次安装依赖并初始化 Electron            |
+| `pnpm dev`                          | 启动桌面端开发                           |
+| `pnpm build`                        | 构建桌面应用                             |
+| `pnpm lint` / `pnpm lint:fix`       | oxlint 校验 / 自动修复，警告也会阻止通过 |
+| `pnpm format` / `pnpm format:check` | Prettier 格式化 / 校验                   |
+| `pnpm typecheck`                    | 全仓类型检查                             |
+| `pnpm test`                         | 运行全部测试                             |
+| `pnpm --filter @catan/server start` | 使用 Node.js 24 运行服务端源码           |
 
 ## 开发规范
 
