@@ -7,14 +7,20 @@ function setup() {
   const camera = new OrthographicCamera(-20, 20, 14, -14, 0.1, 150);
   return { camera, control: new BoardCamera(camera) };
 }
-function settle(control) {
-  for (let i = 0; i < 300; i++) if (!control.step(1 / 60)) return;
+function settle(control: BoardCamera) {
+  for (let i = 0; i < 300; i++) {
+    if (!control.step(1 / 60)) {
+      return;
+    }
+  }
   assert.fail("camera must settle and stop requesting frames");
 }
-function ground(camera, ndc) {
+function ground(camera: OrthographicCamera, ndc: Vector2) {
   const ray = new Raycaster();
   ray.setFromCamera(ndc, camera);
-  return ray.ray.intersectPlane(new Plane(new Vector3(0, 1, 0), 0), new Vector3());
+  const point = ray.ray.intersectPlane(new Plane(new Vector3(0, 1, 0), 0), new Vector3());
+  assert.ok(point);
+  return point;
 }
 
 void test("rotation eases, stays above ground, and settles identically at 30/60/144 Hz", () => {
@@ -26,8 +32,10 @@ void test("rotation eases, stays above ground, and settles identically at 30/60/
     for (let i = 0; i < fps / 2; i++) control.step(1 / fps);
     return camera.position.clone();
   });
-  assert.ok(poses[0].distanceTo(poses[1]) < 1e-9);
-  assert.ok(poses[1].distanceTo(poses[2]) < 1e-9);
+  const [pose30, pose60, pose144] = poses;
+  assert.ok(pose30 && pose60 && pose144);
+  assert.ok(pose30.distanceTo(pose60) < 1e-9);
+  assert.ok(pose60.distanceTo(pose144) < 1e-9);
   const { camera, control } = setup();
   for (const dy of [-1e6, 1e6]) {
     control.rotate(0, dy);
@@ -42,15 +50,15 @@ void test("rotation eases, stays above ground, and settles identically at 30/60/
 
 void test("right-drag follows ground, cursor zoom stays anchored, bounds and reset are stable", () => {
   const { camera, control } = setup();
-  const from = new Vector2(0.1, 0.1),
-    to = new Vector2(0.3, 0.2);
+  const from = new Vector2(0.1, 0.1);
+  const to = new Vector2(0.3, 0.2);
   const point = ground(camera, from);
   control.pan(from, to);
   settle(control);
   assert.ok(point.distanceTo(ground(camera, to)) < 1e-8);
   assert.equal(control.target.y, 0);
-  const cursor = new Vector2(0.25, -0.15),
-    before = ground(camera, cursor);
+  const cursor = new Vector2(0.25, -0.15);
+  const before = ground(camera, cursor);
   control.zoomAt(cursor, -120);
   assert.equal(camera.zoom, 1);
   control.step(1 / 60);
@@ -79,22 +87,22 @@ class TestCanvas extends EventTarget {
   style = { cursor: "" };
   clientHeight = 600;
   ownerDocument = { defaultView: new EventTarget() };
-  captured = null;
+  captured: number | null = null;
   focus() {}
   getBoundingClientRect() {
     return { left: 0, top: 0, width: 800, height: 600 };
   }
-  setPointerCapture(id) {
+  setPointerCapture(id: number) {
     this.captured = id;
   }
-  hasPointerCapture(id) {
+  hasPointerCapture(id: number) {
     return this.captured === id;
   }
   releasePointerCapture() {
     this.captured = null;
   }
 }
-function dispatch(target, type, props = {}) {
+function dispatch(target: EventTarget, type: string, props: Record<string, unknown> = {}) {
   const event = new Event(type, { cancelable: true });
   Object.assign(
     event,
@@ -106,15 +114,22 @@ function dispatch(target, type, props = {}) {
 }
 
 void test("input maps middle rotation/right pan, ignores left drag, normalizes wheel, and cleans up", () => {
-  const canvas = new TestCanvas(),
-    calls = [];
-  const control = {
-    rotate: (...args) => calls.push(["rotate", ...args]),
-    pan: () => calls.push(["pan"]),
-    zoomAt: (_, px) => calls.push(["zoom", px]),
+  const canvas = new TestCanvas();
+  const calls: [string, ...number[]][] = [];
+  const { control } = setup();
+  control.rotate = (dx, dy) => {
+    calls.push(["rotate", dx, dy]);
+  };
+  control.pan = () => {
+    calls.push(["pan"]);
+  };
+  control.zoomAt = (_, px) => {
+    calls.push(["zoom", px]);
   };
   let frames = 0;
-  const binding = bindCameraInput(canvas, control, () => {
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- This mock implements only the canvas APIs exercised by the input binding.
+  const element = canvas as unknown as HTMLCanvasElement;
+  const binding = bindCameraInput(element, control, () => {
     frames++;
   });
   dispatch(canvas, "pointerdown");

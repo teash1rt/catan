@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { InstancedMesh, Matrix4, Mesh, Vector3 } from "three";
+import { InstancedMesh, Matrix4, Mesh, MeshStandardMaterial, Vector3 } from "three";
+import type { Object3D } from "three";
 import { createClassicMap } from "@catan/game-core";
 import {
   BOARD_PRESENTATION,
@@ -15,7 +16,7 @@ import {
 import { anchor, assembleBoard } from "../src/renderer/src/board/assembly.ts";
 import { createNumbers } from "../src/renderer/src/board/numbers.ts";
 
-const assets = new Map();
+const assets = new Map<string, Object3D>();
 const loader = new GLTFLoader();
 const dir = new URL("../../../assets/", import.meta.url);
 const assetIds = fs
@@ -74,8 +75,12 @@ void test("24 GLBs load; all tile anchors and player material interfaces survive
   }
   for (const id of ["road", "settlement", "city"]) {
     let hasPlayer = false;
-    assets.get(id).traverse((o) => {
-      if (o instanceof Mesh && o.material.name === "player_color") hasPlayer = true;
+    const scene = assets.get(id);
+    assert.ok(scene);
+    scene.traverse((node) => {
+      if (node instanceof Mesh && node.material.name === "player_color") {
+        hasPlayer = true;
+      }
     });
     assert.ok(hasPlayer);
   }
@@ -84,7 +89,7 @@ void test("24 GLBs load; all tile anchors and player material interfaces survive
 void test("classic assembly produces 9 clear outward ports, continuous joins, no baked board", () => {
   const layout = createLayout(createClassicMap(42));
   assert.equal(layout.coastCount, 30);
-  const count = (name) => layout.placements.filter((p) => p.asset === name).length;
+  const count = (name: string) => layout.placements.filter((p) => p.asset === name).length;
   assert.equal(count("map-support-hex"), 19);
   assert.equal(count("coast-edge"), 21);
   assert.equal(count("coast-edge-harbor"), 9);
@@ -126,26 +131,34 @@ void test("instancing batches repeated details, preserves triangle instances and
   assert.ok(group.children.some((o) => o.count > 100));
   let colored = false;
   for (const mesh of group.children) {
+    assert.ok(mesh instanceof InstancedMesh);
+    assert.ok(!Array.isArray(mesh.material));
     if (mesh.material.name === "player_color") {
+      assert.ok(mesh.material instanceof MeshStandardMaterial);
       assert.equal(mesh.material.color.getHexString(), "ff0000");
       colored = true;
     }
   }
   assert.ok(colored);
-  for (const id of ["road", "settlement", "city"])
-    assets.get(id).traverse((o) => {
-      if (o instanceof Mesh && o.material.name === "player_color")
-        assert.notEqual(o.material.color.getHexString(), "ff0000");
+  for (const id of ["road", "settlement", "city"]) {
+    const scene = assets.get(id);
+    assert.ok(scene);
+    scene.traverse((node) => {
+      if (node instanceof Mesh && node.material.name === "player_color") {
+        assert.ok(node.material instanceof MeshStandardMaterial);
+        assert.notEqual(node.material.color.getHexString(), "ff0000");
+      }
     });
+  }
   group.userData.dispose();
 });
 
 void test("scale experiment changes only building size, not anchors, roads, map or cached models", () => {
-  const map = createClassicMap(20261019),
-    serialized = JSON.stringify(map);
+  const map = createClassicMap(20261019);
+  const serialized = JSON.stringify(map);
   const base = createLayout(map, true);
   const originalMatrices = [...assets.values()].flatMap((scene) => {
-    const result = [];
+    const result: [Object3D, Matrix4][] = [];
     scene.traverse((node) => result.push([node, node.matrixWorld.clone()]));
     return result;
   });
@@ -155,6 +168,7 @@ void test("scale experiment changes only building size, not anchors, roads, map 
     let buildings = 0;
     for (const [i, placement] of layout.placements.entries()) {
       const before = base.placements[i];
+      assert.ok(before);
       assert.equal(placement.asset, before.asset);
       if (["settlement", "city"].includes(placement.asset)) {
         buildings++;
@@ -168,22 +182,35 @@ void test("scale experiment changes only building size, not anchors, roads, map 
             .setFromMatrixScale(placement.matrix)
             .distanceTo(new Vector3(scale, scale, scale)) < 1e-9,
         );
-      } else assert.ok(placement.matrix.equals(before.matrix));
+      } else {
+        assert.ok(placement.matrix.equals(before.matrix));
+      }
     }
     assert.equal(buildings, 2);
     const group = assembleBoard(assets, map, true, "#b95843", scale);
     // The renderer applies the scale to every GLB submesh, including player-color roofs.
     for (const id of ["settlement", "city"]) {
       const placement = layout.placements.find((p) => p.asset === id);
-      assets.get(id).traverse((node) => {
-        if (!(node instanceof Mesh)) return;
-        const batch = group.children.find((mesh) => mesh.geometry === node.geometry);
-        assert.ok(batch);
+      assert.ok(placement);
+      const scene = assets.get(id);
+      assert.ok(scene);
+      scene.traverse((node) => {
+        if (!(node instanceof Mesh)) {
+          return;
+        }
+        const batch = group.children.find(
+          (mesh) => mesh instanceof InstancedMesh && mesh.geometry === node.geometry,
+        );
+        assert.ok(batch instanceof InstancedMesh);
         const actual = new Matrix4();
         batch.getMatrixAt(0, actual);
         const expected = placement.matrix.clone().multiply(node.matrixWorld);
         assert.ok(
-          actual.elements.every((value, i) => Math.abs(value - expected.elements[i]) < 1e-5),
+          actual.elements.every((value, i) => {
+            const expectedValue = expected.elements[i];
+            assert.ok(expectedValue !== undefined);
+            return Math.abs(value - expectedValue) < 1e-5;
+          }),
         );
       });
     }
@@ -196,8 +223,8 @@ void test("scale experiment changes only building size, not anchors, roads, map 
 });
 
 void test("x/y cross experiment keeps terrain size, shared topology and content attachments independent", () => {
-  const map = createClassicMap(2907596087),
-    serialized = JSON.stringify(map);
+  const map = createClassicMap(2907596087);
+  const serialized = JSON.stringify(map);
   const base = createLayout(map, true);
   const previousDocument = Object.getOwnPropertyDescriptor(globalThis, "document");
   // Only the text canvas is stubbed; all asset and placement matrices are real.
@@ -215,9 +242,9 @@ void test("x/y cross experiment keeps terrain size, shared topology and content 
         const spacing = tileSpacing(gap);
         const layout = createLayout(map, true, "#b95843", scale, gap);
         for (const [id, matrix] of layout.tiles) {
-          const expected = new Vector3()
-            .setFromMatrixPosition(base.tiles.get(id))
-            .multiplyScalar(spacing);
+          const baseMatrix = base.tiles.get(id);
+          assert.ok(baseMatrix);
+          const expected = new Vector3().setFromMatrixPosition(baseMatrix).multiplyScalar(spacing);
           assert.ok(new Vector3().setFromMatrixPosition(matrix).distanceTo(expected) < 1e-9);
           assert.ok(new Vector3().setFromMatrixScale(matrix).equals(new Vector3(1, 1, 1)));
         }
@@ -229,9 +256,13 @@ void test("x/y cross experiment keeps terrain size, shared topology and content 
         );
         assert.ok(Math.abs(nearest - (3 * Math.sqrt(3) + gap)) < 1e-9);
         for (const [i, placement] of layout.placements.entries()) {
-          if (!["settlement", "city", "road"].includes(placement.asset)) continue;
+          if (!["settlement", "city", "road"].includes(placement.asset)) {
+            continue;
+          }
+          const basePlacement = base.placements[i];
+          assert.ok(basePlacement);
           const expected = new Vector3()
-            .setFromMatrixPosition(base.placements[i].matrix)
+            .setFromMatrixPosition(basePlacement.matrix)
             .multiplyScalar(spacing);
           assert.ok(
             new Vector3().setFromMatrixPosition(placement.matrix).distanceTo(expected) < 1e-9,
@@ -267,36 +298,60 @@ void test("x/y cross experiment keeps terrain size, shared topology and content 
         const group = assembleBoard(assets, map, true, "#b95843", scale, gap);
         const ground = group.getObjectByName("experiment-gap-ground");
         assert.equal(Boolean(ground), gap > 0);
-        if (ground) assert.equal(ground.count, 19);
+        if (ground) {
+          assert.ok(ground instanceof InstancedMesh);
+          assert.equal(ground.count, 19);
+        }
         const numbers = createNumbers(assets, map, gap);
         assert.equal(numbers.children.length, 18);
         for (const [i, tile] of map.tiles.filter((t) => t.number !== null).entries()) {
-          const expected = layout.tiles
-            .get(tile.id)
+          const tileMatrix = layout.tiles.get(tile.id);
+          assert.ok(tileMatrix);
+          const expected = tileMatrix
             .clone()
             .multiply(anchor(assets, TERRAIN_ASSETS[tile.terrain], "anchor_number"))
             .multiply(anchor(assets, "number-token", "anchor_content"));
-          assert.ok(numbers.children[i].matrix.equals(expected));
+          const number = numbers.children[i];
+          assert.ok(number);
+          assert.ok(number.matrix.equals(expected));
         }
         const robberTile = map.tiles.find((tile) => tile.id === map.robberTileId);
-        const robberMatrix = layout.tiles
-          .get(robberTile.id)
+        assert.ok(robberTile);
+        const tileMatrix = layout.tiles.get(robberTile.id);
+        assert.ok(tileMatrix);
+        const robberMatrix = tileMatrix
           .clone()
           .multiply(anchor(assets, TERRAIN_ASSETS[robberTile.terrain], "anchor_robber"));
-        assets.get("robber").traverse((node) => {
-          if (!(node instanceof Mesh)) return;
-          const batch = group.children.find((mesh) => mesh.geometry === node.geometry);
+        const robber = assets.get("robber");
+        assert.ok(robber);
+        robber.traverse((node) => {
+          if (!(node instanceof Mesh)) {
+            return;
+          }
+          const batch = group.children.find(
+            (mesh) => mesh instanceof InstancedMesh && mesh.geometry === node.geometry,
+          );
+          assert.ok(batch instanceof InstancedMesh);
           const actual = new Matrix4();
           batch.getMatrixAt(0, actual);
           const expected = robberMatrix.clone().multiply(node.matrixWorld);
-          assert.ok(actual.elements.every((v, i) => Math.abs(v - expected.elements[i]) < 1e-5));
+          assert.ok(
+            actual.elements.every((value, i) => {
+              const expectedValue = expected.elements[i];
+              assert.ok(expectedValue !== undefined);
+              return Math.abs(value - expectedValue) < 1e-5;
+            }),
+          );
         });
         numbers.userData.dispose();
         group.userData.dispose();
       }
   } finally {
-    if (previousDocument) Object.defineProperty(globalThis, "document", previousDocument);
-    else delete globalThis.document;
+    if (previousDocument) {
+      Object.defineProperty(globalThis, "document", previousDocument);
+    } else {
+      Reflect.deleteProperty(globalThis, "document");
+    }
   }
   assert.equal(JSON.stringify(map), serialized);
   for (const gap of [-0.1, 2.1, NaN, Infinity])

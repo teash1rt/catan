@@ -13,7 +13,7 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "test": "pnpm --filter @catan/protocol build && pnpm -r --if-present test",
-    "typecheck": "pnpm --filter @catan/protocol build && pnpm --filter @catan/game-core build && tsc --noEmit --project tsconfig.json && pnpm -r --if-present typecheck"
+    "typecheck": "pnpm --filter @catan/protocol build && pnpm --filter @catan/game-core build && tsc --noEmit --project tsconfig.json && tsc --project tsconfig.tests.json && pnpm -r --if-present typecheck"
   },
   "engines": {
     "node": ">=24.18.0 <25"

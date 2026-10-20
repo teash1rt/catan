@@ -9,7 +9,7 @@ import {
   validateMapConfig,
 } from "../dist/index.js";
 
-const sorted = (values) => values.toSorted((a, b) => a - b);
+const sorted = (values: readonly number[]) => values.toSorted((a, b) => a - b);
 void test("classic topology has 19 cells, 72 unique edges, 54 vertices and 30 coastal edges", () => {
   const topology = buildTopology(classicCells());
   assert.equal(topology.edges.length, 72);
@@ -30,10 +30,19 @@ void test("1000 deterministic seeds preserve resource/number/harbor counts and s
       sorted(CLASSIC_RULES.numbers),
     );
     const byId = new Map(map.tiles.map((tile) => [tile.id, tile]));
-    assert.equal(byId.get(map.robberTileId).terrain, "desert");
-    assert.equal(byId.get(map.robberTileId).number, null);
-    for (const edge of topology.edges.filter((candidate) => candidate.tileIds.length === 2))
-      assert.ok(!edge.tileIds.every((id) => [6, 8].includes(byId.get(id).number)));
+    const robberTile = byId.get(map.robberTileId);
+    assert.ok(robberTile);
+    assert.equal(robberTile.terrain, "desert");
+    assert.equal(robberTile.number, null);
+    for (const edge of topology.edges.filter((candidate) => candidate.tileIds.length === 2)) {
+      assert.ok(
+        !edge.tileIds.every((id) => {
+          const tile = byId.get(id);
+          assert.ok(tile);
+          return tile.number !== null && [6, 8].includes(tile.number);
+        }),
+      );
+    }
     assert.equal(map.harbors.length, 9);
     assert.equal(map.harbors.filter((p) => p.kind === "generic").length, 4);
     for (const kind of ["lumber", "brick", "ore", "grain", "wool"])
