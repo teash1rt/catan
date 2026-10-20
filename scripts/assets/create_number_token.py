@@ -1,8 +1,8 @@
-"""Build a reusable blank token; numerals/pips exist only in temporary reviews.
+"""创建可复用的空白数字牌底座；数字与概率点仅用于临时评审。
 
 Blender --background --python-exit-code 1 --python scripts/assets/create_number_token.py
     -- --work-dir /private/tmp/... --mode build|export|composition
-Canonical delivery is manual after Computer Use review. No game code is changed.
+通过 Computer Use 视觉评审后手动归档正式资产，不修改游戏代码。
 """
 import argparse
 import json
@@ -65,7 +65,7 @@ def lathe(name, profile, mat, col):
     col.objects.link(obj)
     data.materials.append(mat)
     for poly in data.polygons:
-        # Flat annuli retain a clean face; the rounded edge is smoothly shaded.
+        # 平坦环面保持牌面整洁，圆润边缘使用平滑着色。
         poly.use_smooth = abs(poly.normal.z) < .999
     return obj
 
@@ -153,7 +153,7 @@ def build():
     lathe('token.turned-walnut',[(.452,0),(.466,.006),(.477,.019),(.478,.035),(.472,.052),(.457,.071),(.446,.081),(.425,.083)],walnut,col)
     lathe('token.fine-brass-rim',[(.413,.078),(.434,.078),(.438,.086),(.434,.096),(.427,.101),(.416,.101),(.411,.096),(.413,.078)],trim,col)
     lathe('token.ivory-inlay',[(.409,.071),(.413,.080),(.412,.093),(.406,.100)],ivory,col)
-    # One reusable mesh, separate material slots; no numeral geometry in this asset.
+    # 使用一个可复用网格和独立材质槽；资产本身不包含数字几何体。
     bpy.ops.object.select_all(action='DESELECT')
     for obj in col.objects:
         obj.select_set(True)
@@ -187,7 +187,7 @@ def build():
 
 
 def label(value, offset=(0,0,0)):
-    """Temporary readable content; never exported or saved in canonical source."""
+    """临时生成可读内容，不导出或保存到正式源文件。"""
     before = set(bpy.data.objects)
     ink = material('TEST_ONLY.red' if value in (6,8) else 'TEST_ONLY.ink', (.40,.030,.017) if value in (6,8) else (.036,.026,.017))
     bpy.ops.object.text_add()
@@ -207,7 +207,7 @@ def label(value, offset=(0,0,0)):
     scale = min(.60/(hi.x-lo.x), .42/(hi.y-lo.y))
     text.scale = (scale,scale,1)
     text.location = Vector(offset)+Vector((-(lo.x+hi.x)*scale/2,.055-(lo.y+hi.y)*scale/2,.1015))
-    # Standard two-dice likelihood marks; 1/7 are custom previews without pips.
+    # 概率点对应标准双骰结果；1/7 仅用于自定义预览，不显示概率点。
     pips = {2:1,3:2,4:3,5:4,6:5,8:5,9:4,10:3,11:2,12:1}.get(value,0)
     for i in range(pips):
         bpy.ops.mesh.primitive_cylinder_add(vertices=24,radius=.020,depth=.0015,location=Vector(offset)+Vector(((i-(pips-1)/2)*.066,-.245,.1015)))

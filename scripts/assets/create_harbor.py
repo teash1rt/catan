@@ -1,9 +1,9 @@
-"""Stylized base-game harbor and interchangeable trade plaques.
+"""风格化基础版港口与可替换的交易牌。
 
 Blender --background --python-exit-code 1 --python scripts/assets/create_harbor.py
     -- --work-dir /private/tmp/... --mode build|preview|export|composition
-Build in a new temporary directory; visually review before export/promotion.
-No official images/textures or external fonts are redistributed.
+在新建临时目录中制作，通过视觉评审后再导出或归档。
+不分发官方图片、贴图或外部字体。
 """
 import argparse
 import json
@@ -169,9 +169,8 @@ def root_and_anchors(asset_id):
 
 
 def harbor():
-    # Two inward-set fingers make the association with both coast vertices legible.
-    # Low landing tongues touch the terrain at y=0. Under the road strip their
-    # top stays at z=0, so an optional road rests above them without intersection.
+    # 两条内收的栈桥分支分别对应海岸两端顶点。
+    # 低矮登岸段在 y=0 处接触地形，道路带下方的顶面保持 z=0，避免与可选道路相交。
     for x in [-1.04,1.04]:
         v=[(x+dx,y,z) for dx in [-.17,.17] for y,z in [(0,0),(.18,0),(.30,.065),(.30,.022),(.18,-.038),(0,-.038)]]
         f=[tuple(reversed(range(6))),tuple(range(6,12))]
@@ -197,12 +196,12 @@ def harbor():
         x=-1.13+(i+.5)*2.26/23
         box('quay.cross-plank',(x,1.035,.047),(2.26/23-.008,.36,.07),M['oak-light'] if i%5==0 else M['oak'],.007)
         if i%3==0:
-            # Restrained incised-grain rhythm, not a full noisy surface texture.
+            # 刻纹保持克制，避免整片表面布满纹理噪点。
             line('quay.grain',[(x-.02, .94,.083),(x-.014,1.02,.084),(x-.022,1.12,.083)],.0018,M['oak-shade'])
-    # Small bracket holds a removable plaque; no label is baked into the pier.
+    # 小支架承托可拆卸交易牌，不将文字烘焙到码头上。
     box('trade.bracket',(-.79,1.43,.012),(.12,.75,.11),M['dark-wood'])
     box('trade.platform',(-.79,1.64,.067),(.76,.67,.056),M['oak'],.035)
-    # Rounded lapstrake merchant hull, long axis X, pointed ends, open interior.
+    # 商船采用圆润的搭接船板船体，长轴沿 X，两端收尖，内部敞开。
     cx,cy=.36,1.61
     n=40
     rings=[(.55,.12,-.225),(.68,.237,-.115),(.77,.277,.04),(.77,.277,.16)]
@@ -232,7 +231,7 @@ def harbor():
     mastx=cx-.08
     beam('ship.mast',(mastx,cy,-.01),(mastx,cy,1.15),.025,M['dark-wood'])
     beam('ship.yard',(mastx-.46,cy,1.00),(mastx+.46,cy,1.00),.017,M['oak'])
-    # Broad, gently billowed square linen sail with shaped foot and panel seams.
+    # 宽阔的亚麻方帆略微鼓起，保留帆脚轮廓和布片接缝。
     def sail_point(u,v):
         w=.42+.065*math.sin(math.pi*v)
         x=mastx+(2*u-1)*w
@@ -250,17 +249,17 @@ def harbor():
     for v in [0,1]: line('sail.hem',[sail_point(i/24,v) for i in range(25)],.006,M['rope'])
     for x in [cx-.65,cx+.65]:
         line('ship.stay',[(mastx,cy,1.13),(x,cy,.18)],.005,M['rope'])
-    # Single subdued pennant; no player ownership color on a shared harbor.
+    # 仅保留一面低饱和度小旗；公共港口不使用玩家归属色。
     flag=mesh('ship.pennant',[(mastx,cy,1.14),(mastx+.24,cy+.025,1.11),(mastx+.17,cy,1.05),(mastx,cy,1.07)],[(0,1,2,3)],M['linen-shade'])
     mod=flag.modifiers.new('pennant thickness','SOLIDIFY'); mod.thickness=.004
     bpy.context.view_layer.objects.active=flag; bpy.ops.object.modifier_apply(modifier=mod.name)
     for x in [cx-.55,cx+.52]:
         line('ship.mooring',[(x,cy-.22,.14),(x,1.31,.085),(x,1.16,.09)],.007,M['rope'])
-    # Only two low-profile cargo parcels, to express trade without clutter.
+    # 仅放置两件低矮货物，以简洁的场景表达贸易。
     for x,y,s in [(cx+.21,cy+.07,.13),(cx+.40,cy+.02,.10)]:
         box('ship.cargo',(x,y,.08),(s,s,.12),M['oak-light'])
         box('ship.cargo-strap',(x,y,.143),(.018,s+.003,.012),M['dark-wood'],.002)
-    # Rivets stay sparse and larger than texture noise.
+    # 铆钉保持稀疏，尺寸大于纹理噪点。
     for x in [-1.04,1.04]:
         for y in [.51,.87]:
             for dx in [-.12,.12]: cylinder('pier.peg',(x+dx,y,.069),.009,.006,M['dark-wood'],8)
@@ -329,8 +328,7 @@ def bounds_check(objects,asset_id):
         for name,expected in {'anchor_edge_a':(-1.5,0,0),'anchor_edge_b':(1.5,0,0),'anchor_trade':TRADE}.items():
             a=next(o for o in objects if o.name==name)
             assert (a.matrix_world.translation-Vector(expected)).length<1e-5
-        # Conservative triangle AABBs guarantee endpoint-cylinder exclusion,
-        # including triangle interiors, not only vertices.
+        # 使用保守的三角面 AABB，确保整个三角面都避开端点圆柱净空区。
         for o in objects:
             if o.type!='MESH': continue
             for tri in o.data.loop_triangles:
@@ -340,8 +338,7 @@ def bounds_check(objects,asset_id):
                 for endpoint in [-1.5,1.5]:
                     dx=max(xmin-endpoint,0,endpoint-xmax); dy=max(ymin,0,-ymax)
                     assert math.hypot(dx,dy)>=.27999
-                # Clip triangles to the road footprint, so crossings of a
-                # triangle interior cannot be missed by a vertex-only test.
+                # 将三角面裁剪到道路占地内，避免仅检查顶点而漏掉三角面内部的穿插。
                 clipped=ps
                 for axis,bound,sign in [(0,1.2,1),(0,-1.2,-1),(1,.18,1),(1,-.18,-1)]:
                     out=[]
@@ -413,7 +410,7 @@ def export():
         for o in col.objects: o.select_set(True)
         bpy.ops.export_scene.gltf(filepath=str(WORK/(asset_id+'.glb')),export_format='GLB',use_selection=True,
                                   export_extras=True,export_yup=True,export_cameras=False,export_lights=False)
-        # Truly independent import: factory reset removes original data and names.
+        # 先恢复出厂场景以清除原始数据和名称，保证回导检查相互独立。
         bpy.ops.wm.read_factory_settings(use_empty=True)
         root,objects=import_asset(WORK/(asset_id+'.glb'))
         bpy.context.view_layer.update(); report[asset_id]=bounds_check(objects,asset_id)
@@ -441,7 +438,7 @@ def composition():
     vertices=[Vector((3*math.cos(i*math.pi/3),3*math.sin(i*math.pi/3),0)) for i in range(6)]
     for i in range(6):
         a,b=vertices[i],vertices[(i+1)%6]; center=(a+b)/2
-        # Order the tangent clockwise, so local +Y is the outward sea normal.
+        # 沿顺时针排列切向，使局部 +Y 指向外海法线。
         tangent=(a-b).normalized()
         harbor_root.rotation_mode='XYZ'; harbor_root.rotation_euler.z=math.atan2(tangent.y,tangent.x)
         harbor_root.location=center; bpy.context.view_layer.update()
@@ -456,14 +453,14 @@ def composition():
     text_mesh('8',(-.55,-3*math.sqrt(3)/2-.72+.055,.103),.4,mat('review.number',(.42,.025,.018)),'review.digit')
     cam=bpy.data.objects['review.close']; cam.location=(3,8,10); aim(cam,(0,-1.15,.15)); cam.data.ortho_scale=8.5
     save(WORK/'review-coast.blend')
-    # All six interchangeable plaques at one scale and one neutral light setup.
+    # 六种可替换交易牌使用相同缩放与中性灯光进行评审。
     bpy.ops.wm.read_factory_settings(use_empty=True); studio('harbor')
     for i,kind in enumerate(KINDS):
         r,_=import_asset(WORK/('harbor-marker-'+kind+'.glb')); r.location=((i%3-1)*.88,(i//3)*.85,0)
     cam=bpy.data.objects['review.close']; cam.location=(.2,-2,5); aim(cam,(0,.43,0)); cam.data.ortho_scale=3.3
     bpy.data.objects['review.ground'].location.z=-.01
     save(WORK/'review-markers.blend')
-    # Source preview combines authored parts without writing anything to exports.
+    # 源文件预览仅组合已有部件，不写入导出文件。
     bpy.ops.wm.open_mainfile(filepath=str(WORK/'harbor.blend'))
     r,_=import_asset(WORK/'harbor-marker-generic.glb'); r.location=TRADE
     save(WORK/'review-assembled.blend')

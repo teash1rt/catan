@@ -1,7 +1,7 @@
-"""Repair only the forest floor; keep drafts, recovery and renders temporary.
+"""仅修补森林地面，草稿、恢复副本与渲染图均保留在临时目录。
 
 Blender --background --python this_file -- --work-dir /private/tmp/... [--export]
-Prepare -> Computer Use review -> export -> review -> promote verified pair.
+准备 → Computer Use 视觉评审 → 导出 → 复核 → 归档已验证的源文件与 GLB。
 """
 import argparse
 import json
@@ -48,7 +48,7 @@ if not args.export:
     render('before-board')
     floor = bpy.data.objects['terrain.forest-floor']
     floor.data.calc_loop_triangles()
-    # Extra support radius covers a complete triangle, not only its vertices.
+    # 扩大支撑半径以覆盖完整三角面，而不只覆盖顶点。
     edge = max((floor.data.vertices[t.vertices[i]].co.xy-floor.data.vertices[t.vertices[(i+1)%3]].co.xy).length
                for t in floor.data.loop_triangles for i in range(3))
     changed, max_change = 0, 0

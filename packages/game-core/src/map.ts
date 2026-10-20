@@ -14,7 +14,7 @@ const OFFSETS = [
   [1, -1],
 ] as const;
 
-// Integer lattice identities are independent of model scale and floating-point transforms.
+// 使用整数格点标识拓扑，避免模型缩放和浮点变换影响共享边与顶点的身份。
 export function buildTopology(cells: readonly Cell[]): Topology {
   const vertices = new Map<string, Vertex>();
   const edges = new Map<string, Edge>();
@@ -42,7 +42,7 @@ export function buildTopology(cells: readonly Cell[]): Topology {
       return id;
     });
     for (let i = 0; i < 6; i++) {
-      // Directed clockwise: land on right, sea on left in Blender XY coordinates.
+      // 在 Blender XY 坐标中按顺时针定向：陆地在右侧，海洋在左侧。
       const a = keys[(i + 1) % 6]!;
       const b = keys[i]!;
       const id = [a, b].toSorted().join("|");
@@ -116,7 +116,7 @@ function shuffle<T>(values: readonly T[], random: () => number): T[] {
 }
 const red = (number: number | null | undefined): boolean => number === 6 || number === 8;
 
-/** Local preview generation only; a future multiplayer room owns authoritative setup. */
+/** 仅用于本地预览；后续联机地图由服务端房间权威生成。 */
 export function createClassicMap(seed: number): MapConfig {
   const random = randomSource(seed);
   const cells = classicCells();
@@ -136,7 +136,7 @@ export function createClassicMap(seed: number): MapConfig {
     number: null as number | null,
   }));
   const producing = tiles.filter((tile) => tile.terrain !== "desert");
-  // Bounded randomized search; never hang the UI for an unlucky seed.
+  // 限制随机搜索次数，避免特定种子导致界面长时间阻塞。
   let found = false;
   for (let attempt = 0; attempt < 10000; attempt++) {
     const numbers = shuffle(CLASSIC_RULES.numbers, random);

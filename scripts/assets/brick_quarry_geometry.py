@@ -1,4 +1,4 @@
-"""Broad painted clay quarry with a subordinate medieval field kiln."""
+"""宽阔的手绘黏土采场，以中世纪野外砖窑作为辅助元素。"""
 import math
 import random
 
@@ -7,9 +7,9 @@ from mathutils import Vector
 
 
 def ground_color(x, y):
-    """Shared floor/apron paint; the route is color, never raised geometry."""
+    """地面与场地共用的配色；运输路径只通过颜色表现，不抬高几何体。"""
     variation = .5+.22*math.sin(x*2+y*3)+.10*math.cos(x*5-y*2)
-    # Resource identity extends all the way to the edge: no forest-green rim.
+    # 资源配色延伸到地块边缘，避免出现森林式的绿色边框。
     color = Vector((.30,.092,.043)).lerp(Vector((.44,.17,.077)),variation)
     route=[(-1.22,-.03),(-1.20,-.62),(-1.13,-1.24),(-.58,-1.56),
            (.02,-1.54),(.37,-1.32),(1.08,-.40),(1.25,-.12)]
@@ -31,8 +31,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
     cut = mat('kiln.cut-brick',(.64,.25,.09))
     dark = mat('kiln.interior',(.055,.025,.013))
     def ridge(name, stations):
-        # A single connected rock mass: crest, saddles and asymmetric buttresses.
-        # The cross-section has stratified ledges, not spherical lobes.
+        # 山脊、鞍部和不对称支脉组成连续岩体，横截面采用分层台阶。
         profile=[(-1,0),(-.82,.25),(-.59,.64),(-.28,.89),
                  (0,1),(.18,.85),(.39,.58),(.45,.55),
                  (.57,.33),(.78,.13),(1,0)]
@@ -44,12 +43,12 @@ def build_quarry(asset, root, mat, box, mesh, link):
             inward=Vector((tangent.y,-tangent.x))
             for j,(q,z) in enumerate(profile):
                 width=w*(1+.17*math.sin(i*1.8+j*.75))
-                # Broad inward spurs vary along the ridge instead of an even wall.
+                # 宽阔的内向支脉沿山脊错落分布，避免形成齐整的墙面。
                 if q>0:
                     width*=1.20+.23*math.sin(i*2.1)
                 xy=Vector((x,y))+inward*q*width
                 xy+=tangent*.055*math.sin(i*2.3+j*1.8)*math.sin(math.pi*(q+1)/2)
-                # Oblique, continuous strata are visibly irregular but not noisy.
+                # 倾斜且连续的岩层保留不规则变化，同时控制视觉噪点。
                 height=h*z+.085*math.sin(i*1.7+j*.65)*math.sin(math.pi*(q+1)/2)
                 vertices.append((xy.x,xy.y,max(0,height)))
         n=len(profile)
@@ -61,10 +60,10 @@ def build_quarry(asset, root, mat, box, mesh, link):
         indices.extend([1,1])
         obj=mesh(name,vertices,faces,clay,indices)
         for face in obj.data.polygons:
-            # Colors follow large rock planes; no continuous candy-stripe bands.
+            # 配色跟随大块岩面，避免形成连续的彩色条纹。
             light=face.normal.dot(Vector((-.4,-.6,.7)))
             face.material_index=3 if light>.65 else (2 if light>-.15 else 1)
-        # Resolve broad non-planar rock faces into stable export triangles.
+        # 将较大且不共面的岩面拆分为稳定的三角面，保证导出可靠。
         bpy.context.view_layer.objects.active=obj
         bevel=obj.modifiers.new('worn-rock-arris','BEVEL')
         bevel.width,bevel.segments=.012,2
@@ -104,7 +103,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
             p.material_index = 1 if len(materials)>1 and p.center.z>.1 else 0
         return obj
 
-    # Low field kiln: a simple vaulted shell, no wall-wide small brick lattice.
+    # 低矮砖窑采用简洁拱壳，避免整墙铺满细小砖格。
     cx,cy=1.25,.45
     box('kiln.foot',(cx,cy,.055),(1.32,1.22,.11),clay[0],.045)
     profile=[(-.60,.08),(.60,.08),(.60,.52)]
@@ -114,7 +113,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
     f=[tuple(range(count)),tuple(reversed(range(count,2*count)))]
     f += [(i,i+count,(i+1)%count+count,(i+1)%count) for i in range(count)]
     kiln=mesh('kiln.vaulted-body',v,f,[kiln_mat])
-    # True entrance recess; continuous body stays legible without tiny mortar gaps.
+    # 窑口采用真实凹陷，主体保持连续，不依赖细小砂浆缝表现结构。
     aperture=[(cx-.23,.035),(cx+.23,.035)]
     aperture += [(cx+.23*math.cos(i*math.pi/16),.31+.23*math.sin(i*math.pi/16)) for i in range(17)]
     ndoor=len(aperture)
@@ -131,7 +130,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
     bpy.ops.object.modifier_apply(modifier=bevel.name)
     box('kiln.dark-back',(cx,.72,.28),(.46,.035,.46),dark,.005)
     box('kiln.hearth',(cx,.25,.06),(.50,.85,.06),clay[0],.01)
-    # Only seven oversized voussoirs and two jambs define the masonry language.
+    # 用七块较大的拱券石和两侧门柱表现砌筑结构。
     for i in range(7):
         a0,a1=i*math.pi/7+.007,(i+1)*math.pi/7-.007
         verts=[(cx+r*math.cos(a),y,.31+r*math.sin(a))
@@ -139,7 +138,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
         mesh('kiln.arch',verts,[(0,1,3,2),(4,6,7,5),(0,4,5,1),(2,3,7,6),(0,2,6,4),(1,5,7,3)],[cut])
     for sign in [-1,1]:
         box('kiln.jamb',(cx+sign*.28,-.125,.20),(.10,.12,.25),cut,.012)
-    # Broad capped vent is lower than the mountain, with no modern tall chimney.
+    # 宽口带盖排气口低于山体，避免现代高烟囱的轮廓。
     for sign in [-1,1]:
         box('kiln.vent',(cx+sign*.145,.76,1.03),(.09,.38,.39),kiln_mat,.014)
         box('kiln.vent',(cx,.76+sign*.145,1.03),(.20,.09,.39),kiln_mat,.014)
@@ -147,7 +146,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
         box('kiln.cap',(cx,.76+sign*.16,1.24),(.23,.10,.065),cut,.012)
     box('kiln.vent-shadow',(cx,.76,1.02),(.22,.22,.02),dark,0)
 
-    # A compact pile of large, minimally separated fired bricks is enough context.
+    # 少量大块烧制砖紧凑堆放，砖块之间仅留少量间隙。
     prototype=box('brick.prototype',(0,0,0),(.29,.19,.12),cut,.016)
     data=prototype.data
     bpy.data.objects.remove(prototype,do_unlink=True)
@@ -159,7 +158,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
                 obj.parent=root
                 obj.location=(1.57+(col-.5)*.295,-.65+(row-.5)*.195,.06+layer*.12)
 
-    # Reserve the hex's full edge strip, including the rear diagonal boundaries.
+    # 保留六边形完整的边缘带，包括后侧的斜边。
     for obj in asset.objects:
         if obj.type=='MESH' and obj.name.startswith('quarry.'):
             for v in obj.data.vertices:
@@ -168,8 +167,8 @@ def build_quarry(asset, root, mat, box, mesh, link):
                 if support>2.31:
                     v.co.x=x*2.31/support-obj.location.x
                     v.co.y=y*2.31/support-obj.location.y
-    # A continuous talus apron buries the bases, merging the ridge into the floor.
-    # Mesh sampling has a guard band around both mounting cylinders.
+    # 连续碎石坡掩埋山脚，使山脊与地面衔接。
+    # 网格采样在两个挂点圆柱周围预留保护带。
     kernels=[(-.65,1.0,1.8,1.25,.48),(-.45,.34,1.25,.78,.35),
              (-1.55,.12,.90,1.18,.48),
              (-1.48,-.72,.88,.95,.32),(-1.15,-1.46,.88,.65,.19),
@@ -183,14 +182,14 @@ def build_quarry(asset, root, mat, box, mesh, link):
         for cx,cy,r in [(-.55,-.72,.50),(.70,-.83,.34)]:
             t=max(0,min(1,(math.hypot(x-cx,y-cy)-r-.16)/.32))
             z*=t*t*(3-2*t)
-        # Keep the kiln threshold and production pad flat.
+        # 保持窑口门槛和生产场地平整。
         d=max(abs(x-1.25)-.73,abs(y-.45)-.72)
         z*=max(0,min(1,d/.27))
         edge=max(x*math.cos(math.pi/6+j*math.pi/3)+y*math.sin(math.pi/6+j*math.pi/3) for j in range(6))
         z*=max(0,min(1,(2.31-edge)/.16))
         return z
 
-    # Sculpt the existing ground itself: no overlapping skin or coplanar seams.
+    # 直接雕刻已有地面，避免叠加表皮或产生共面接缝。
     apron=bpy.data.objects['terrain.clay-floor']
     for v in apron.data.vertices:
         v.co.z=apron_height(v.co.x,v.co.y)
@@ -203,7 +202,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
             colors.data[idx].color=(*color,1)
     apron.data.update()
 
-    # Sparse, deliberately grouped work traces; never a uniform scatter.
+    # 作业痕迹采用稀疏的成组分布，避免均匀散布。
     for i,(x,y,s) in enumerate([(-1.17,-.05,.13),(-1.27,-.25,.08),
             (-1.50,-.93,.10),(-1.31,-1.18,.07),(-.88,-1.79,.10),
             (-.62,-1.84,.06),(.04,-1.82,.07),(1.30,-1.42,.09)]):
@@ -229,7 +228,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
             f.append((start,start+1,start+2))
         mesh('quarry.dry-tuft',v,f,[straw])
 
-    # Keep fixed assemblies compact, while preserving shared stock geometry.
+    # 合并固定组件，同时保留可复用的砖料几何体。
     for prefix in ['quarry.','kiln.']:
         parts=[o for o in asset.objects if o.type=='MESH' and o.name.startswith(prefix)]
         bpy.ops.object.select_all(action='DESELECT')

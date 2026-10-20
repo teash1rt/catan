@@ -1,6 +1,6 @@
-"""Blue limestone quarry: stepped cut faces, timber derrick and stone exchange.
+"""蓝色石灰岩采场：台阶状切面、木制起重架与石材交易区。
 
-Shares the tile contract, not the brick tile's silhouette or building geometry.
+共享地块契约，石料地块的轮廓与建筑几何体独立于砖土地块。
 """
 import math
 
@@ -11,7 +11,7 @@ from mathutils import Vector
 def ground_color(x, y):
     variation = .5 + .18*math.sin(x*2.1+y) + .12*math.cos(y*2.4-x)
     color = Vector((.12,.16,.18)).lerp(Vector((.26,.30,.31)),variation)
-    # A warm haul route runs below the quarry to the exchange, not through props.
+    # 暖色运输路径沿采场下方通向交易区，避开道具。
     distance = abs(y - (-1.55 + .25*math.sin(x*1.6)))
     weight = max(0,min(1,(.34-distance)/.20))
     return color.lerp(Vector((.48,.40,.28)),weight*.6)
@@ -43,8 +43,8 @@ def build_quarry(asset, root, mat, box, mesh, link):
             ob.rotation_euler.x=math.pi/2
         return ob
 
-    # A single stepped, asymmetric cliff. Wide benches distinguish worked stone
-    # from the brick tile's pointed iron-rich ridge and enclosed kiln courtyard.
+    # 单个不对称阶梯岩壁以宽阔平台表现已开采石材。
+    # 轮廓区别于砖土地块的尖锐富铁山脊和封闭窑场。
     stations=[(-2.57,-.30,.68,.43),(-2.34,-.94,1.10,1.08),
               (-2.06,-1.25,1.45,1.64),(-1.73,-1.20,1.76,2.08),
               (-1.39,-.62,2.00,2.24),(-1.04,-.11,2.18,2.04),
@@ -52,10 +52,8 @@ def build_quarry(asset, root, mat, box, mesh, link):
               (.28,.14,2.29,2.00),(.70,.46,2.24,2.18),
               (1.10,1.00,2.12,1.86),(1.47,1.30,1.95,1.63),
               (1.83,1.31,1.72,1.04),(2.13,1.10,1.39,.38)]
-    # y interpolant, proportional height. Near-vertical cuts, broad benches,
-    # a broken upper crown and steep natural rear slope form one closed mass.
-    # Two irregular worked ledges below a broad natural crown. Do not repeat
-    # the same three thin bands through every station: that reads as folded sheet.
+    # 截面参数分别为 y 插值与相对高度；近垂直切面、宽平台、破碎山顶和陡峭背坡组成封闭岩体。
+    # 宽阔自然山顶下方设置两层不规则作业台阶，避免每个截面都重复三条薄带而呈现折纸感。
     profile=[(0,0),(.08,.12),(.15,.36),(.27,.38),
              (.34,.66),(.45,.69),(.58,.92),(.73,1),(.88,.89),(1,0)]
     vertices,faces,indices=[],[],[]
@@ -64,8 +62,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
             shape=math.sin(math.pi*t)
             yy=front+(back-front)*t+.12*math.sin(i*1.7+j*.9)*shape
             xx=x+.10*math.sin(i*1.6+j*.7)*shape
-            # Offset cut heights independently, with wider exposed faces and
-            # occasional sloped benches joining the uncut shoulders.
+            # 独立错开切割高度，增大裸露岩面，并用少量斜平台连接未开采的山肩。
             zz=max(0,h*z+.13*math.sin(i*1.9+j*1.2)*shape)
             vertices.append((xx,yy,zz))
     n=len(profile)
@@ -75,13 +72,13 @@ def build_quarry(asset, root, mat, box, mesh, link):
             shade=2 if j in [0,2,4,6,7,8] else 1
             if j in [2,4] and i in [2,5,8,10]:
                 shade=3
-            # Broad continuous rock planes, not alternating triangle colors.
+            # 岩面采用宽阔连续配色，避免三角面颜色交替。
             faces.append(quad)
             indices.append(shade)
     faces.extend([tuple(reversed(range(n))),tuple((len(stations)-1)*n+j for j in range(n))])
     indices.extend([1,1])
-    # Bound only natural rock; structures are designed to fit, never squashed.
-    # Keep the same bounded coordinates for face-mounted fissures as well.
+    # 仅约束自然岩体的边界，建筑按空间设计，避免通过挤压变形适配。
+    # 贴附岩面的裂缝也使用同一组受约束坐标。
     for k,(x,y,z) in enumerate(vertices):
         support=max(x*math.cos(math.pi/6+j*math.pi/3)+y*math.sin(math.pi/6+j*math.pi/3) for j in range(6))
         scale=min(1,2.29/max(support,1e-6))
@@ -92,7 +89,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
     bevel.width,bevel.segments=.035,2
     bpy.ops.object.modifier_apply(modifier=bevel.name)
 
-    # Sparse tapered fracture marks on worked faces, never a full noisy grid.
+    # 已开采岩面仅添加稀疏收尖的裂纹，避免铺满网格噪点。
     for i,j,t in [(3,1,.34),(5,1,.63),(7,3,.45),(9,3,.62),(6,5,.24),(2,3,.55)]:
         lo=Vector(vertices[i*n+j]).lerp(Vector(vertices[(i+1)*n+j]),t)
         hi=Vector(vertices[i*n+j+1]).lerp(Vector(vertices[(i+1)*n+j+1]),t+.035)
@@ -103,7 +100,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
         mesh('quarry.cut-fissure',[lo,mid+Vector((.012,0,0)),hi,mid-Vector((.009,0,0))],
              [(0,1,2,3)],[stone[0]])
 
-    # Ground apron joins the cliff; protect both removable gameplay markers.
+    # 地面缓坡衔接岩壁，并保护两个可拆卸玩法标记的净空。
     def apron_height(x,y):
         kernels=[(-1.96,-.56,.65,1.23,.32),(-1.33,.13,.87,.87,.28),
                  (-.20,.54,1.3,.68,.24),(.82,1.41,1.13,.63,.25)]
@@ -125,8 +122,8 @@ def build_quarry(asset, root, mat, box, mesh, link):
             x,y,z=floor.data.vertices[floor.data.loops[idx].vertex_index].co
             colors.data[idx].color=(*ground_color(x,y).lerp(Vector((.14,.22,.28)),min(1,z*3)),1)
 
-    # Timber derrick: triangular bracing, winding wheel and suspended sling.
-    # It is set on the open right-hand loading pad, clear of both markers.
+    # 木制起重架由三角支撑、卷扬轮和悬挂吊索组成。
+    # 放在右侧空旷装卸区，避开两个标记。
     for x,y in [(1.31,.54),(1.31,1.30)]:
         box('crane.stone-foot',(x,y,.10),(.32,.31,.20),stone[2],.04)
     beam('crane.mast',(1.31,.92,.06),(1.31,.92,2.09),.16,wood)
@@ -141,7 +138,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
         beam('crane.sling',(.46,.19,.68),(.46+dx,.19,.54),.023,rope)
         beam('crane.sling-wrap',(.46+dx,.19,.54),(.46+dx,.19,.20),.023,rope)
     beam('crane.sling-under',(.21,.19,.20),(.71,.19,.20),.023,rope)
-    # An open eight-spoke wooden winding wheel, clearly pre-industrial.
+    # 开放式八辐木制卷扬轮保持前工业时代造型。
     center=Vector((1.51,.67,.66))
     for i in range(12):
         a,b=i*math.tau/12,(i+1)*math.tau/12
@@ -154,15 +151,15 @@ def build_quarry(asset, root, mat, box, mesh, link):
     beam('crane.axle-support',(1.51,.92,.06),(1.51,.92,.71),.10,wood)
     beam('crane.winding-rope',(1.51,.86,.66),(1.31,.92,2.0),.022,rope)
 
-    # Compact stone merchant's canopy on the lower right, not a second factory.
-    # Real stock sits beneath it; a stone-sample sign conveys trade without clutter.
+    # 右下方的小型石商棚作为交易区，避免形成第二座工厂。
+    # 真实石料置于棚下，配合石样招牌表达贸易。
     for x in [1.27,2.07]:
         for y in [-.56,.17]:
             beam('market.post',(x,y,0),(x,y,1.04 if y<0 else 1.20),.065,wood)
     beam('market.front-header',(1.22,-.56,1.04),(2.12,-.56,1.04),.065,endgrain)
     beam('market.back-header',(1.22,.17,1.20),(2.12,.17,1.20),.065,endgrain)
     for x in [1.27,2.07]:
-        # Follow the canvas sag, with the rib's top just underneath the cloth.
+        # 支撑肋顺着帆布下垂形状布置，顶部略低于布面。
         for a,b in [(0,.33),(.33,.66),(.66,1)]:
             beam('market.roof-rib',
                  (x,-.65+.91*a,1.007+.19*a-.045*math.sin(math.pi*a)),
@@ -181,7 +178,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
     box('market.sign',(1.69,-.605,.87),(.29,.045,.20),wood,.025)
     box('market.stone-emblem',(1.69,-.635,.875),(.12,.026,.09),stone[4],.01,angle=.1)
 
-    # Shared finished stone blocks: larger cuboids than the brick stock.
+    # 共用的成品石块采用比砖料更大的长方体。
     prototype=box('stock.prototype',(0,0,0),(.39,.30,.24),stone[3],.032)
     data=prototype.data
     bpy.data.objects.remove(prototype,do_unlink=True)
@@ -191,14 +188,14 @@ def build_quarry(asset, root, mat, box, mesh, link):
             asset.objects.link(ob)
             ob.parent=root
             ob.location=(x,y,apron_height(x,y)+.12+layer*.243)
-    # Few large wedge-like offcuts and slab seams, clustered along the work route.
+    # 少量大型楔形边角料和石板接缝沿作业路径集中布置。
     for i,(x,y,s) in enumerate([(-1.8,-.98,.20),(-1.27,-1.68,.11),(-.96,-1.82,.09),
                                (.22,-1.78,.10),(1.46,-1.13,.17),(1.61,-1.24,.10)]):
         z=apron_height(x,y)
         v=[(x-s,y-s*.6,z),(x+s,y-s*.5,z),(x+s*.6,y+s*.7,z),(x-s*.8,y+s*.5,z),
            (x-s*.5,y-s*.25,z+s*.6),(x+s*.5,y+s*.15,z+s*.45)]
         mesh('quarry.offcut',v,[(0,1,5,4),(1,2,5),(2,3,4,5),(3,0,4),(0,3,2,1)],stone,[2,3,1,2,1])
-    # Join fixed assemblies; preserve reusable stock mesh instances.
+    # 合并固定组件，保留可复用的石料网格实例。
     for prefix in ['quarry.','crane.','market.']:
         parts=[o for o in asset.objects if o.type=='MESH' and o.name.startswith(prefix)]
         bpy.ops.object.select_all(action='DESELECT')

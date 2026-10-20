@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// Shared schemas must also run in Electron's strict, no-eval production CSP.
+// 共享 schema 必须兼容 Electron 生产环境禁止 eval 的严格 CSP。
 z.config({ jitless: true });
 
 export const terrainSchema = z.enum(["forest", "brick", "stone", "wheat", "sheep", "desert"]);

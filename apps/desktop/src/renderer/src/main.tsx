@@ -1,8 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App.tsx";
-// CSS is intentionally imported for its stylesheet side effect.
-// oxlint-disable-next-line import/no-unassigned-import
+// oxlint-disable-next-line import/no-unassigned-import -- 通过副作用导入加载 CSS 样式。
 import "./style.css";
 
 const rootElement = document.querySelector("#root");

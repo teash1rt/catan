@@ -16,7 +16,7 @@ type Batch = {
   sea: boolean;
 };
 
-/** Every repeated GLB node shares GPU geometry; cached original materials remain immutable. */
+/** 重复的 GLB 节点共享 GPU 几何体；缓存的原始材质始终保持不变。 */
 export function assembleBoard(
   assets: AssetLibrary,
   config: MapConfig,
@@ -88,7 +88,7 @@ export function assembleBoard(
   }
   group.userData.batchCount = batches.size;
   if (tileGap > 0) {
-    // Temporary neutral ground under the separated tiles, not a new canonical asset.
+    // 在分离的地块下方临时生成中性铺地，不作为正式模型资产。
     const radius = 3 * tileSpacing(tileGap);
     const geometry = new CylinderGeometry(radius, radius, 0.295, 6, 1, false, Math.PI / 2);
     geometry.translate(0, -0.1525, 0);

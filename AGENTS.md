@@ -73,6 +73,7 @@
 
 ## 代码风格
 
+- 优先使用中文注释，说明设计意图、约束和非显然的原因；工具指令、协议字段及必要的技术名词保留原文。
 - 格式化统一由 Prettier 负责（`printWidth: 100`），提交前运行 `pnpm format`；CI 用 `pnpm format:check` 校验。不要手工调整 Prettier 会接管的内容。
 - 一行只写一条语句、一条声明；禁止 `const a = 1; const b = 2;` 或 `const x = f(); if (x) g();` 这类同行拼接。
 - `if` 即使只有一个语句也必须换行并使用大括号，禁止 `if (cond) return;` 或 `if (cond) throw ...;`。

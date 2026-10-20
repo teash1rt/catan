@@ -9,7 +9,7 @@ const EMPTY_KEYS: ReadonlySet<string> = new Set();
 const position = (event: PointerEvent): Vector2 => new Vector2(event.clientX, event.clientY);
 const context = (event: Event): void => event.preventDefault();
 
-/** Ground-anchored strategy camera. Input changes goals; frames ease toward them. */
+/** 以地面为锚点的策略视角相机：输入更新目标，每帧缓动接近目标。 */
 export class BoardCamera {
   readonly target = new Vector3();
   private goal = new Vector3();
@@ -64,7 +64,7 @@ export class BoardCamera {
 
   rotate(dx: number, dy: number): void {
     this.goalYaw -= dx * 0.0035;
-    // Never reach the top-down singularity or skim through models.
+    // 限制俯仰角，避免进入垂直俯视奇点或贴地穿过模型。
     this.goalPitch = clamp(this.goalPitch - dy * 0.003, Math.PI / 7.2, Math.PI / 3);
   }
 
@@ -87,7 +87,7 @@ export class BoardCamera {
 
   reset(): void {
     this.goal.set(0, 0, 0);
-    // Return along the shortest arc, even after several full revolutions.
+    // 即使已旋转多圈，复位仍沿最短圆弧返回。
     this.goalYaw =
       this.yaw +
       Math.atan2(Math.sin(Math.atan2(10, 24) - this.yaw), Math.cos(Math.atan2(10, 24) - this.yaw));
@@ -145,7 +145,7 @@ const CAMERA_KEYS = new Set([
   "ArrowRight",
 ]);
 
-/** Keep events on the canvas: scrolling UI or typing elsewhere must not move the map. */
+/** 将输入事件限制在画布内，避免滚动 UI 或在其他位置输入时移动地图。 */
 export function bindCameraInput(
   element: HTMLCanvasElement,
   control: BoardCamera,

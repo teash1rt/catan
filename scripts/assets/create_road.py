@@ -1,8 +1,8 @@
-"""Build, visually review, export and compose a tintable medieval road.
+"""制作、视觉评审、导出并组合可换色的中世纪道路。
 
 Blender --background --python-exit-code 1 --python scripts/assets/create_road.py
     -- --work-dir /private/tmp/... --mode build|export|composition
-Drafts/evidence remain temporary. Promote only after Computer Use review.
+草稿和评审证据保留在临时目录，通过 Computer Use 视觉评审后再归档。
 """
 import argparse
 import json
@@ -110,8 +110,7 @@ def check(objects,label):
     assert low[0]>=-1.20001 and high[0]<=1.20001
     assert low[1]>=-.18001 and high[1]<=.18001
     assert abs(low[2])<1e-6 and high[2]<=.09
-    # Conservative end planes guarantee the entire triangle, not only vertices,
-    # stays outside the endpoint building exclusion circles.
+    # 使用保守的端面边界，确保整个三角面都避开端点建筑的圆形净空区。
     assert 1.5-max(abs(low[0]),abs(high[0]))>=.28
     assert 'player_color' in mats
     anchors={o.name:list(o.matrix_world.translation) for o in objects if o.name.startswith('anchor_')}
@@ -132,7 +131,7 @@ def build():
     shade=material('road.ochre-stone',(.39,.345,.265))
     mortar=material('road.earth-mortar',(.21,.17,.115))
     wood=material('road.dark-oak',(.14,.064,.024))
-    # Thin contact base, dressed side edges and a shallow crowned cobble surface.
+    # 薄接触底座配合修整侧边与略微拱起的卵石路面。
     box('road.mortar-bed',(0,0,.018),(2.40,.36,.036),mortar,col,.008)
     for s in [-1,1]:
         box('road.oak-bound-edge',(0,s*.166,.029),(2.385,.023,.033),wood,col,.004)
@@ -237,7 +236,7 @@ def composition():
         anchors=[o for o in objects if o.name.startswith('anchor_edge_')]
         assert any(o.matrix_world.translation.length<1e-5 for o in anchors)
         assert any((o.matrix_world.translation-direction*3).length<1e-5 for o in anchors)
-        # Same root transform per logical edge, never one road per neighboring tile.
+        # 每条逻辑边仅使用一个根变换，避免相邻地块各生成一条重复道路。
         report.append({'angle':deg,'center':list(root.location),'scale':list(root.scale),'endpoint_alignment':True})
     building,_=import_asset(model_dir/'settlement'/'model.glb'); building.location=(3,0,0)
     cam=bpy.data.objects['review.close']; cam.location=(2,-6,9); aim(cam,(.15,0,.06)); cam.data.ortho_scale=7.2

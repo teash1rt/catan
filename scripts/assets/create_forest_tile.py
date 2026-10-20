@@ -1,7 +1,7 @@
-"""Deterministic forest sample. Run with Blender --background --python this_file.
+"""确定性的森林样板，使用 Blender --background --python this_file 运行。
 
-Writes a NEW blend; never replaces an existing source. Review first,
-then use --export with the reviewed blend. Studio objects are not exported.
+仅创建新的 blend，不覆盖已有源文件。先评审，再通过 --export 导出已验收的 blend。
+摄影棚对象不参与导出。
 """
 import argparse
 import math
@@ -104,7 +104,7 @@ def clear(x, y, extra=0):
 
 
 def elevation(x, y):
-    # The lattice edge is 3/24 = .125; protect whole triangles, not only vertices.
+    # 格点边长为 3/24 = .125；净空检查需保护整个三角面，而不只检查顶点。
     if not inside(x, y, 0.42) or not clear(x, y, 0.14):
         return 0
     return 0.026 * (1 + math.sin(x * 3.1 + y) * math.cos(y * 2.7))
@@ -129,7 +129,7 @@ def blob(name, location, scale, mat, subdivisions=2, collection=None):
 def tree_mesh(seed):
     local = random.Random(seed)
     wood, leaves = Geometry(), Geometry()
-    # Bending stem, roots and visible forks, not a stack of primitive cones.
+    # 树干保留弯曲、根系与可见分叉，避免由简单圆锥堆叠成形。
     spine = [(0, 0, 0), (0.035, -0.015, 0.45), (-0.015, 0.02, 0.95), (0.035, 0.035, 1.55)]
     rings=[]
     for center,radius in zip(spine,[0.12,0.084,0.049,0.015]):
@@ -141,7 +141,7 @@ def tree_mesh(seed):
     for i in range(6):
         a = i * math.tau / 6 + local.uniform(-0.25, 0.25)
         wood.tube((math.cos(a)*0.23, math.sin(a)*0.23, -0.018), (0, 0, 0.12), 0.009, 0.056, 9)
-    # Overlapping asymmetric boughs carrying many individually folded leaves.
+    # 不对称树枝交错重叠，并承载独立折叠成形的叶片。
     centers = []
     for level, count, radius, height in [(0, 5, 0.32, 1.17), (1, 4, 0.29, 1.45), (2, 2, 0.12, 1.66)]:
         for i in range(count):
@@ -152,7 +152,7 @@ def tree_mesh(seed):
             wood.tube((0.01, 0, max(0.6, c.z-0.65)), fork, 0.043, 0.023, 7)
             wood.tube(fork, c, 0.023, 0.006, 7)
             for j in range(32):
-                # A few leaf accents complement the crown, not a cloud of micro-leaves.
+                # 少量叶片点缀补充树冠，避免堆出密集的微小叶片噪点。
                 u, a2 = local.uniform(-1, 1), local.uniform(0, math.tau)
                 shell = local.uniform(0.94, 1.10)
                 q = Vector((math.sqrt(1-u*u)*math.cos(a2)*0.31,
@@ -185,7 +185,7 @@ def tree_mesh(seed):
     smooth=canopy.modifiers.new('soft-sculpted-volume','SMOOTH')
     smooth.factor,smooth.iterations=0.6,3
     bpy.ops.object.modifier_apply(modifier=smooth.name)
-    # Paint broad, coherent color patches directly into exportable vertex colors.
+    # 将大块且连贯的配色直接写入可导出的顶点色。
     canopy.data.materials.clear()
     painted=material('foliage.painted-volume',(1,1,1),1.0)
     canopy.data.materials.append(painted)
@@ -204,7 +204,7 @@ def tree_mesh(seed):
     node=painted.node_tree.nodes.new('ShaderNodeVertexColor')
     node.layer_name='COLOR_0'
     painted.node_tree.links.new(node.outputs['Color'],painted.node_tree.nodes.get('Principled BSDF').inputs['Base Color'])
-    # Bring prototype geometry to a shared local origin before instancing.
+    # 实例化前，将原型几何体归一到共用的局部原点。
     for v in canopy.data.vertices:
         v.co=canopy.matrix_world @ v.co
     canopy.location=(0,0,0)
@@ -257,7 +257,7 @@ def build():
     global ASSET, BARK, LEAF
     if SOURCE.exists():
         raise FileExistsError(f'Refusing to overwrite {SOURCE}; use --source for a temporary draft')
-    # Only the new background process is reset; user's open scene is untouched.
+    # 仅重置新启动的后台进程，不影响用户已打开的场景。
     bpy.ops.wm.read_factory_settings(use_empty=True)
     ASSET = bpy.data.collections.new('ASSET_forest_tile')
     bpy.context.scene.collection.children.link(ASSET)
@@ -271,7 +271,7 @@ def build():
     BARK = [material('oak.bark',(0.27,0.105,0.028)),material('oak.bark-ridge',(0.37,0.17,0.044)),material('oak.endgrain',(0.61,0.38,0.12)),material('oak.growth-ring',(0.39,0.20,0.05))]
     LEAF = [material('foliage.deep',(0.022,0.155,0.033)), material('foliage.forest',(0.055,0.28,0.035)),material('foliage.moss',(0.115,0.39,0.037)),material('foliage.sunlit',(0.30,0.51,0.044)),material('foliage.new',(0.42,0.60,0.07))]
     stone = material('stone.warm-grey',(0.31,0.30,0.24),0.94)
-    # Exact hex boundary, layered soil edge, no bevel that opens a seam.
+    # 保持精确的六边形边界与分层土壤边缘，避免倒角产生接缝。
     g = Geometry()
     for i in range(6):
         a,b = i*math.pi/3,(i+1)*math.pi/3
@@ -279,7 +279,7 @@ def build():
             g.face([(3*math.cos(a),3*math.sin(a),lo),(3*math.cos(b),3*math.sin(b),lo),(3*math.cos(b),3*math.sin(b),hi),(3*math.cos(a),3*math.sin(a),hi)], [2,0,1][j])
     g.face([(3*math.cos(i*math.pi/3),3*math.sin(i*math.pi/3),-0.30) for i in reversed(range(6))],2)
     g.object('terrain.soil-cut',soil)
-    # Triangular lattice across each hex sector; slight interior relief only.
+    # 每个六边形扇区使用三角格点网格，仅在内部添加轻微起伏。
     g = Geometry()
     def point(i,j,a,b):
         x,y = (a[0]*i+b[0]*j)/24,(a[1]*i+b[1]*j)/24
@@ -298,7 +298,7 @@ def build():
                     index=RNG.choice([2,3,3]) if path or not clear(x,y) else RNG.choices([0,1,2,4],[6,5,1,2])[0]
                     g.face(tri,index)
     floor = g.object('terrain.forest-floor',ground)
-    # Continuous vertex color survives GLB; no renderer-specific noise shader.
+    # 使用能保留到 GLB 的连续顶点色，避免依赖特定渲染器的噪声着色器。
     floor.data.materials.clear()
     floor_mat=material('ground.continuous', (1,1,1),0.97)
     floor.data.materials.append(floor_mat)
@@ -328,7 +328,7 @@ def build():
             obj.rotation_euler.z=angle
     for obj in proto:
         bpy.data.objects.remove(obj,do_unlink=True)
-    # Rocks, leaf litter and sparse understory remain inside build clearances.
+    # 岩石、落叶和稀疏林下植被均遵守建造净空约束。
     for i,(x,y,s) in enumerate([(-1.80,0.25,0.19),(1.22,0.80,0.16),(1.70,-0.32,0.12),(-0.10,1.74,0.12),(-1.68,-1.1,0.095)]):
         blob(f'detail.stone.{i}',(x,y,elevation(x,y)+s*0.35),(s,s*0.78,s*0.55),stone)
     grass=Geometry()
@@ -353,7 +353,7 @@ def build():
                 for sign in [-1,1]:
                     fern.leaf(c,d*0.35+s*sign,0.07*(1-t)+0.024,0.014,2+(n%2))
     fern.object('detail.ferns',LEAF)
-    # A small split-log stack reads as timber; kept separate from number content.
+    # 用小型劈木堆表现木材资源，并与数字内容保持分离。
     logs=Geometry()
     for i,(x,y,z) in enumerate([(0.65,-1.70,0.085),(0.86,-1.70,0.085),(0.75,-1.70,0.225)]):
         logs.tube((x,y-0.28,z),(x+0.055,y+0.28,z+0.025),0.087,0.078,11)

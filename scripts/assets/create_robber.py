@@ -1,8 +1,8 @@
-"""Build/review the independent robber miniature in a temporary directory.
+"""在临时目录中制作并评审独立的强盗微缩棋子。
 
 Blender --background --python-exit-code 1 --python scripts/assets/create_robber.py
     -- --work-dir /private/tmp/... [--mode build|export|composition] [--source ...]
-No canonical files are overwritten. Export only after Computer Use review.
+不覆盖正式文件，通过 Computer Use 视觉评审后再导出。
 """
 import argparse
 import json
@@ -76,7 +76,7 @@ def ellipsoid(name, pos, scale, mat, segments=32, rings=20):
 
 
 def loft(name, rings, mat, n=40, folds=0):
-    # Rings are (x, y, z, x radius, y radius). Sculpted contours, not stacked balls.
+    # 截面环参数为 (x, y, z, x 方向半径, y 方向半径)，用于雕刻连续轮廓。
     vertices = []
     for j, (x, y, z, rx, ry) in enumerate(rings):
         for i in range(n):
@@ -159,9 +159,9 @@ def build():
     steel = material('robber.hardware.satin-steel', (.14,.16,.17), .48, .65)
     plinth = material('robber.base.slate', (.065,.07,.07))
 
-    # A low, neutral gaming foot: footprint <= .34 at final scale.
+    # 低矮的中性棋子底座在最终比例下保持占地半径 <= .34。
     loft('base.low-slate', [(0,0,.0,1.70,1.70),(0,0,.045,1.74,1.74),(0,0,.115,1.70,1.70)], plinth, n=80)
-    # Wide grounded stance; individually contoured boots and trouser legs.
+    # 双脚站姿宽稳，靴子和裤腿分别雕刻轮廓。
     for s, y in [(-1,-.12),(1,.08)]:
         x = s*.51
         loft('boot.left' if s<0 else 'boot.right', [(x,y-.14,.12,.31,.48),(x,y-.20,.18,.34,.54),(x,y-.18,.34,.32,.50),(x,y,.55,.24,.28),(x,y,.95,.23,.245),(x,y,1.24,.275,.27)], leather)
@@ -170,7 +170,7 @@ def build():
         line('boot.front-seam',[(x,y-.50,.23),(x,y-.30,.51),(x,y-.251,1.17)],.013,edge)
         block('boot.strap',(x,y-.02,.89),(.49,.53,.065),leather,.018)
         block('boot.small-buckle',(x+s*.245,y-.12,.89),(.035,.14,.115),brass,.016)
-    # Broad chest tapered into a belted waist and split skirt.
+    # 宽阔胸部向束腰和开衩衣摆收窄。
     loft('tunic.contoured-body',[(0,.03,2.18,.76,.41),(0,.03,2.30,.77,.43),(0,.02,2.75,.59,.37),(0,0,3.05,.57,.35),(0,.035,3.45,.72,.39),(0,.055,3.92,.89,.40),(0,.07,4.17,.86,.38),(0,.06,4.38,.47,.28)],tunic,folds=.018)
     line('tunic.front-opening',[(0,-.40,2.19),(.015,-.40,2.5),(.035,-.354,3.04)],.019,lining)
     line('tunic.hem-left',[(-.74,-.08,2.20),(-.49,-.33,2.19),(0,-.405,2.19)],.025,edge)
@@ -181,12 +181,12 @@ def build():
     block('belt.buckle-tongue',(0,-.457,3.065),(.025,.018,.15),brass,.008)
     for x in [.20,.32,.44]:
         ellipsoid('belt.rivet',(x,-math.sqrt(max(.02,.38**2*(1-(x/.64)**2)))-.025,3.06),(.025,.017,.025),brass,16,8)
-    # A quiet, shaped leather breast panel replaces the bright diagonal baldric.
-    # Broad facets and restrained rivets read as medieval brigandine, not sci-fi armor.
+    # 以低饱和度的成形皮革胸片替代醒目的斜肩带。
+    # 宽阔切面和少量铆钉表现中世纪布面甲的质感。
     panel=mesh('brigandine.chest-panel',[(-.58,-.295,3.98),(0,-.47,4.04),(.58,-.295,3.98),(-.43,-.325,3.23),(0,-.425,3.24),(.43,-.325,3.23)],[(0,3,4,1),(1,4,5,2)],leather)
     mod=panel.modifiers.new('leather thickness','SOLIDIFY');mod.thickness=.035
     bevel(panel,.022,3)
-    # One arm hangs with a closed hand, the other rests on an upright sheathed sword.
+    # 一只手臂自然下垂并握拳，另一只手搭在竖立的带鞘剑上。
     for side, pts in [(-1,[(-.68,.045,4.04),(-1.00,-.03,3.75),(-1.10,-.16,3.40),(-1.04,-.30,3.07)]),(1,[(.68,.04,4.04),(1.00,-.04,3.80),(1.13,-.22,3.48),(1.03,-.53,3.31)])]:
         tube('sleeve.sculpted',pts,[.30,.285,.24,.19],tunic,24)
         wrist=Vector(pts[-1]); elbow=Vector(pts[-2]); d=(wrist-elbow).normalized()
@@ -208,11 +208,11 @@ def build():
                 xx=.88+i*.088
                 tube('hand.sword-finger',[(xx,-.59,3.25),(xx,-.728,3.20),(xx,-.73,3.06)],[.047,.047,.043],leather,12)
             ellipsoid('hand.sword-thumb',(.85,-.60,3.13),(.065,.095,.11),leather)
-    # Small provision pouch, rather than ornamental clutter.
+    # 仅添加小型补给袋，控制装饰物数量。
     loft('belt.pouch', [(-.59,-.26,2.48,.16,.14),(-.59,-.28,2.55,.215,.15),(-.59,-.28,2.84,.20,.15),(-.59,-.26,2.94,.14,.13)],leather,n=24)
     block('pouch.flap',(-.59,-.427,2.80),(.32,.05,.22),edge,.055)
     ellipsoid('pouch.button',(-.59,-.469,2.75),(.032,.018,.032),brass,16,8)
-    # Sword is entirely sheathed: a grounded leader pose, not a battle swing.
+    # 剑完全收于鞘中，保持稳重的首领站姿。
     tube('sword.scabbard',[(1.00,-.61,.12),(1.01,-.61,.34),(1.025,-.62,2.79)],[.025,.095,.11],leather,16)
     tube('sword.chape',[(1.00,-.61,.12),(1.01,-.61,.42)],[.03,.095],brass,16)
     tube('sword.throat',[(1.025,-.62,2.55),(1.025,-.62,2.80)],[.12,.12],brass,16)
@@ -223,7 +223,7 @@ def build():
         z=2.84+i*.052
         line('sword.grip-wrap',[(1.025+.079*math.cos(a*math.tau/24),-.62+.079*math.sin(a*math.tau/24),z+a*.03/24) for a in range(25)],.009,edge)
     ellipsoid('sword.pommel',(1.025,-.62,3.20),(.106,.104,.116),brass)
-    # Open draped cape: its transverse folds are continuous from shoulders to hem.
+    # 敞开的披风自然垂落，横向褶皱从肩部连续延伸到下摆。
     cape_rows=[(.24,1.43,.59),(.43,1.47,.67),(1.12,1.42,.67),(1.85,1.32,.65),(2.62,1.22,.61),(3.40,1.18,.53),(3.92,1.13,.40),(4.22,1.00,.31),(4.43,.47,.23)]
     count=65; verts=[]
     for j,(z,rx,ry) in enumerate(cape_rows):
@@ -231,9 +231,8 @@ def build():
             a=-.12+(math.pi+.24)*i/(count-1)
             wave=1+.045*math.cos(8*a+.10*j)
             x=rx*math.cos(a)*wave
-            # Upper front corners sit behind the arms, not through the sleeves.
-            # Tuck the upper seam underneath the shoulder mantle; exposed lining
-            # on its back would read as a split rather than a sewn connection.
+            # 披风前侧上角位于手臂后方，避免穿过袖子。
+            # 上缘接缝藏在肩披下，避免背面露出内衬而呈现断裂感。
             upper_tuck=min(1,max(0,(4.25-z)/.5))
             y=.12+ry*math.sin(a)*wave+.22*min(1,max(0,(z-2.5)/.65))*upper_tuck*abs(math.cos(a))**8
             zz=z+(1-j/(len(cape_rows)-1))*.08*math.cos(5*a+.5)
@@ -246,16 +245,16 @@ def build():
     for i in [0,count-1]:
         line('cloak.bound-front-edge',[verts[j*count+i] for j in range(len(cape_rows))],.041,fold)
     line('cloak.bound-hem',verts[:count],.035,fold)
-    # Broad shoulder mantle gives an unmistakable commanding silhouette.
+    # 宽阔肩披强化首领轮廓。
     loft('cloak.shoulder-mantle',[(0,.085,3.88,1.05,.46),(0,.085,4.00,1.16,.48),(0,.065,4.20,1.21,.50),(0,.05,4.39,.92,.42),(0,.04,4.56,.46,.31)],teal,folds=.012)
     loft('hood.draped-cowl',[(0,.04,4.38,.47,.33),(0,.025,4.58,.43,.335),(0,.03,4.77,.37,.32),(0,.045,4.92,.32,.29)],teal,folds=.045)
     line('cowl.soft-fold',[(-.31,-.21,4.66),(-.12,-.317,4.59),(.10,-.32,4.58),(.32,-.20,4.65)],.024,fold)
     line('mantle.lower-piping',[(-.87,-.06,4.025),(-.64,-.25,4.0),(0,-.365,4.02),(.64,-.25,4.0),(.87,-.06,4.025)],.028,fold)
     block('mantle.iron-clasp',(0,-.437,4.22),(.19,.05,.15),brass,.025)
-    # Neck and stylized sculpted face, with a firm jaw and small, focused eyes.
+    # 颈部与风格化面部保留坚实下颌和细小、集中的眼睛。
     loft('neck',[(0,.015,4.34,.24,.24),(0,.015,4.90,.245,.24)],skin)
     loft('head.sculpted-face',[(0,-.01,4.78,.17,.20),(0,-.045,4.86,.29,.28),(0,-.02,5.05,.36,.335),(0,-.02,5.23,.41,.365),(0,0,5.36,.415,.37),(0,.015,5.52,.39,.345),(0,.035,5.68,.33,.28),(0,.04,5.74,.19,.17)],skin,n=40)
-    # Lower-face beard uses one tapered volume, with a few broad carved locks.
+    # 下半脸胡须使用单个收尖体块，并雕刻少量宽阔发束。
     loft('face.short-beard',[(0,-.10,4.76,.13,.20),(0,-.095,4.85,.27,.255),(0,-.085,4.99,.34,.28),(0,-.06,5.09,.35,.292)],beard,n=32)
     for s in [-1,1]:
         ellipsoid('face.eye',(s*.163,-.342,5.43),(.092,.027,.033),ivory,24,12)
@@ -268,14 +267,14 @@ def build():
     line('face.lower-lip',[(-.10,-.399,5.087),(0,-.427,5.078),(.10,-.399,5.087)],.016,skin)
     for x in [-.15,0,.15]:
         line('beard.carved-lock',[(x,-.337,5.025),(x*.83,-.365,4.91),(x*.5,-.301,4.80)],.011,leather)
-    # Wrapped charcoal cloth hides the lower face, leaving a narrow human gaze.
-    # No helmet, respirator, emissive eyes or technological surface details.
+    # 炭灰色围布遮住下半脸，只露出狭窄的人类目光。
+    # 不添加头盔、呼吸器、发光眼睛或科技表面细节。
     scarf=loft('face.wrapped-scarf',[(0,-.02,4.77,.25,.32),(0,-.045,4.92,.36,.37),(0,-.065,5.12,.40,.46),(0,-.05,5.27,.375,.55)],lining,folds=.012)
     for vertex in list(scarf.data.vertices)[-40:]:
         front=max(0,(-vertex.co.y-.05)/.55)
         vertex.co.z+=.085*front**3
     line('scarf.diagonal-fold',[(-.32,-.25,5.20),(-.16,-.445,5.15),(.08,-.475,5.07),(.32,-.27,5.03)],.017,fold)
-    # An open hood, not a solid cone: front rim and nested rear dome rings.
+    # 开放兜帽由前沿和嵌套的后侧圆顶环构成，避免形成实心圆锥。
     hoodverts=[]; hn=64
     for j in range(9):
         t=j/8
@@ -294,10 +293,10 @@ def build():
     hood.data.materials.append(lining)
     mod=hood.modifiers.new('hood lined thickness','SOLIDIFY');mod.thickness=.04;mod.material_offset=1
     line('hood.bound-opening',hoodverts[:hn]+[hoodverts[0]],.038,fold)
-    # A single offset seam on the dome, not dense decorative noise.
+    # 圆顶只保留一条偏置接缝，控制装饰噪点。
     line('hood.crown-seam',[hoodverts[j*hn+2] for j in range(9)],.015,fold)
 
-    # Bake geometry, scale and normals. One static asset: no armature required.
+    # 烘焙几何体、缩放与法线；作为静态资产交付，无需骨架。
     for obj in list(ASSET.objects):
         bpy.ops.object.select_all(action='DESELECT')
         obj.select_set(True); bpy.context.view_layer.objects.active=obj
@@ -315,7 +314,7 @@ def build():
     for obj in list(ASSET.objects):
         if obj!=root:
             obj.parent=root
-    # Consolidate by material into one mesh: compact GLB, editable disconnected parts.
+    # 按材质合并为单个网格，使 GLB 保持紧凑，同时保留可编辑的不连通部件。
     bpy.ops.object.select_all(action='DESELECT')
     meshes=[o for o in ASSET.objects if o.type=='MESH']
     for obj in meshes:obj.select_set(True)
@@ -400,7 +399,7 @@ def export():
 def composition():
     bpy.ops.wm.open_mainfile(filepath=str(SOURCE))
     characters=list(bpy.data.collections['ASSET_robber'].objects)
-    # Use the independently exported GLB for all mounting views.
+    # 所有挂载视图均使用独立导出的 GLB。
     for obj in characters:bpy.data.objects.remove(obj,do_unlink=True)
     bpy.ops.import_scene.gltf(filepath=str(WORK/'robber.glb'))
     character=list(bpy.context.selected_objects)

@@ -1,8 +1,8 @@
-"""Modular support, coastline and sea; Blender-only assembly fixtures, not runtime.
+"""模块化承托、海岸与海面；组合样板仅用于 Blender，不参与游戏运行。
 
 Blender --background --python-exit-code 1 --python scripts/assets/create_map_base.py
   -- --work-dir /private/tmp/<fresh-directory> --mode build|preview|export|composition
-Review build before export. Canonical assets are never overwritten by this script.
+制作完成后先评审再导出；脚本不覆盖正式资产。
 """
 import argparse
 import json
@@ -19,7 +19,7 @@ MODELS = ROOT / 'assets'
 IDS = ['map-support-hex', 'coast-edge', 'coast-edge-harbor', 'coast-corner-convex',
        'coast-corner-concave', 'sea-surface']
 TILES = ['forest-tile', 'brick-tile', 'stone-tile', 'wheat-tile', 'sheep-tile', 'desert-tile']
-# Local X follows the clockwise boundary, +Y is sea. Every end uses this exact profile.
+# 局部 X 沿顺时针海岸边界，+Y 指向海洋；所有端点共用此精确截面。
 PROFILE = [(0, -.54), (0, 0), (.18, 0), (.28, 0), (.36, -.10),
            (.44, -.25), (.46, -.35), (.46, -.48), (.44, -.54)]
 TRIM = .28
@@ -64,7 +64,7 @@ def reset(asset_id):
 
 
 def sweep(asset_id, sections, lowered=None):
-    # A section is (center, outward miter): width is measured normal to each edge.
+    # 每个截面由中心与向外的斜接方向组成，宽度沿各边法线测量。
     lowered = lowered or set()
     verts = [(c.x+n.x*w, c.y+n.y*w, -.04 if i in lowered and j in [1,2,3] else z)
              for i,(c,n) in enumerate(sections) for j,(w,z) in enumerate(PROFILE)]
@@ -85,7 +85,7 @@ def sweep(asset_id, sections, lowered=None):
 def make_asset(asset_id):
     anchors = {}
     if asset_id == 'map-support-hex':
-        # Full-radius top meets existing terrain bottom; no extra terrain/base above it.
+        # 完整半径的顶面贴合现有地形底部，不在其上叠加地形或基座。
         rings = [(3, -.30), (3, -.465), (2.985, -.495), (2.97, -.54)]
         verts = [(r*math.cos(i*math.tau/6), r*math.sin(i*math.tau/6), z)
                  for r,z in rings for i in range(6)]
@@ -248,12 +248,12 @@ def topology(cells):
     edges=defaultdict(list); vertices=defaultdict(set); centers=[]
     for index,(q,r) in enumerate(cells):
         center=Vector((4.5*q,3*math.sqrt(3)*(r+q/2),0)); centers.append(center)
-        # Integer lattice identity avoids float32 drift between independently built cells.
+        # 使用整数格点标识，避免独立构建的地块之间产生 float32 漂移。
         keys=[(round((3*q+x)*1.5,6), round((2*r+q+y)*1.5*math.sqrt(3),6))
               for x,y in [(2,0),(1,1),(-1,1),(-2,0),(-1,-1),(1,-1)]]
         for key in keys: vertices[key].add(index)
         for i in range(6):
-            a,b=keys[(i+1)%6], keys[i]  # Clockwise; outward is local +Y.
+            a,b=keys[(i+1)%6], keys[i]  # 顺时针定向；局部 +Y 指向外侧。
             edges[tuple(sorted([a,b]))].append((a,b,index))
     boundary=[v[0] for v in edges.values() if len(v)==1]
     assert all(len(v) in [1,2] for v in edges.values())
@@ -314,7 +314,7 @@ def composition(work, source=False):
     for key,tin,tout,asset_id in corners:
         corner=place(asset_id,(*key,0),math.atan2(tin.y,tin.x)); bpy.context.view_layer.update()
         actual_corner=mesh_points(corner)
-        # Every profile vertex must exist in both actual transformed asset meshes.
+        # 截面上的每个顶点都必须出现在两个资产经过变换后的实际网格中。
         n1=Vector((-tin.y,tin.x)); n2=Vector((-tout.y,tout.x)); v=Vector(key)
         for t,n,sign in [(tin,n1,-1),(tout,n2,1)]:
             corner_end=v+t*TRIM*sign
@@ -328,8 +328,8 @@ def composition(work, source=False):
                 assert min((p-expected).length for p in actual_corner)<2e-5
                 assert min((p-expected).length for p in actual_edge)<2e-5
     sea=place('sea-surface',(0,0,-.22)); sea.scale=(18,16,1)
-    # A northern concave bay is intentionally not auto-filled with harbors.
-    # Choose a clear southern horizontal coast for the measured positive fixture.
+    # 北侧凹湾刻意不自动填入港口。
+    # 选择无遮挡的南侧水平海岸作为测量用的有效样例。
     a,b,index=port_edge
     va,vb=Vector((*a,0)),Vector((*b,0)); t=(vb-va).normalized(); mid=(va+vb)/2
     angle=math.atan2(t.y,t.x); harbor=place('harbor',mid,angle)
@@ -337,7 +337,7 @@ def composition(work, source=False):
     anchor=next(o for o in harbor.children_recursive if o.name.startswith('anchor_trade'))
     place('harbor-marker-generic',anchor.matrix_world.translation,angle)
     place('road',mid,angle); place('settlement',va); place('city',vb)
-    # Exact separating-axis test of convex footprints; boundary touching is allowed.
+    # 对凸多边形占地执行精确的分离轴检测，允许边界接触。
     def overlaps(poly_a,poly_b):
         for polygon in [poly_a,poly_b]:
             for p,q in zip(polygon,polygon[1:]+polygon[:1]):
@@ -357,13 +357,13 @@ def composition(work, source=False):
     harbor_conflicts=sum(overlaps(a,b) for i,a in enumerate(footprints) for b in footprints[i+1:])
     assert harbor_conflicts>0, 'Fixture must reject conflicting simultaneous ports'
     close=bpy.data.objects['review.close']; close.location=mid+Vector((3,-5,5)); aim(close,mid+Vector((0,-.6,0))); close.data.ortho_scale=6
-    # Focus concave vertex for a dedicated seam inspection camera.
+    # 将专用接缝检查相机对准凹角顶点。
     key,*_=next(c for c in corners if c[3]=='coast-corner-concave')
     c=bpy.data.cameras.new('review.concave'); c.type='ORTHO'; c.ortho_scale=6
     o=bpy.data.objects.new(c.name,c); bpy.context.scene.collection.objects.link(o)
     o.location=Vector((*key,0))+Vector((1,2,6)); aim(o,(*key,0))
     save(work/('review-source-map.blend' if source else 'review-map.blend'))
-    # Additional topology-only shapes exercise a hole, disjoint islands and 19 cells.
+    # 额外的纯拓扑样例覆盖带孔地图、分离岛屿与 19 地块地图。
     fixtures={'six':cells,'single':[(0,0)],'pair':[(0,0),(1,0)],
               'ring':[(1,0),(1,-1),(0,-1),(-1,0),(-1,1),(0,1)],
               'islands':[(0,0),(3,0)],

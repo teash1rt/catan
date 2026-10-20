@@ -1,8 +1,8 @@
-"""Read-only geometry checks and a separate composition/GLB review scene.
+"""只读检查几何体，并创建独立的组合与 GLB 评审场景。
 
-Usage: Blender --background model.blend --python this_file -- --review-dir /tmp/...
-Add --glb to inspect the exported file with the same source studio.
-The opened source file is never saved or modified on disk.
+用法：Blender --background model.blend --python this_file -- --review-dir /tmp/...
+添加 --glb 可在同一源摄影棚中检查导出文件。
+不会保存或修改磁盘上已打开的源文件。
 """
 import argparse
 import json
@@ -65,8 +65,8 @@ report['unique_meshes']=len(meshes)
 report['materials']=len({m.name for o in assets if o.type=='MESH' for m in o.data.materials})
 report['anchors']={name:list(bpy.data.objects[name].matrix_world.translation) for name in ['anchor_number','anchor_robber']}
 report['unexpected_camera_lights']=[o.name for o in assets if o.type in {'CAMERA','LIGHT'}]
-# Include the actual floor and clip triangle heights; the legacy tree/detail
-# check alone misses terrain intruding into a mounting cylinder.
+# 将实际地面纳入检查，并按高度裁剪三角面。
+# 旧版仅检查树木和细节，会漏掉侵入挂点圆柱的地形。
 report['errors'].extend(inspect(assets)['errors'])
 REVIEW.mkdir(parents=True,exist_ok=True)
 (REVIEW/('glb-check.json' if IS_GLB else 'source-check.json')).write_text(json.dumps(report,indent=2))
@@ -76,13 +76,13 @@ if report['errors']:
 
 scene=bpy.context.scene
 if IS_GLB:
-    # Separate saved review scene, original studio stays out of runtime GLB.
+    # 单独保存评审场景，原始摄影棚不进入运行时 GLB。
     scene.camera=bpy.data.objects['review.board']
     scene.render.filepath=str(REVIEW/'glb-board.png')
     bpy.ops.wm.save_as_mainfile(filepath=str(REVIEW/'glb-review.blend'))
     bpy.ops.render.render(write_still=True)
 
-# Test-only attachments are never exported as part of the forest.
+# 测试挂载物不作为森林资产的一部分导出。
 def mat(name,color):
     m=bpy.data.materials.new(name)
     m.diffuse_color=(*color,1)
@@ -120,7 +120,7 @@ for p in bpy.context.object.data.polygons:
 scene.camera=bpy.data.objects['review.board']
 scene.render.filepath=str(REVIEW/('glb-composition.png' if IS_GLB else 'composition.png'))
 bpy.ops.render.render(write_still=True)
-# Adjoining bases verify exact shared seams, independently of tree placement.
+# 相邻基座用于验证共边接缝是否精确，不依赖树木摆放。
 for x,y in [(4.5,3*math.sqrt(3)/2),(-4.5,3*math.sqrt(3)/2)]:
     for name in ['terrain.soil-cut','terrain.forest-floor']:
         src=bpy.data.objects[name]

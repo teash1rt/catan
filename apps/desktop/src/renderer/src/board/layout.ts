@@ -11,7 +11,7 @@ export const TERRAIN_ASSETS: Record<Terrain, string> = {
   desert: "desert-tile",
 };
 export const BUILDING_SCALES = [1, 1.8, 2.5, 3, 4, 5] as const;
-// User-selected presentation; runtime controls must not reset these values.
+// 用户已确认的展示比例；运行时操作不得重置这些值。
 export const BOARD_PRESENTATION = Object.freeze({ tileGap: 0.4, buildingScale: 5 });
 export const TILE_GAP_RANGE = { min: 0, max: 2, step: 0.05 } as const;
 export const BUILDING_SCALE_RANGE = { min: 1, max: 5, step: 0.1 } as const;
@@ -26,7 +26,7 @@ export type BoardLayout = {
   tiles: Map<string, Matrix4>;
   coastCount: number;
 };
-// Layout math uses Blender XY; this one boundary converts to the already Y-up GLBs.
+// 布局计算使用 Blender XY 坐标，仅在此处转换为 GLB 已采用的 Y-up 坐标。
 export function transform(x: number, y: number, height = 0, angle = 0): Matrix4 {
   return new Matrix4().makeTranslation(x, height, -y).multiply(new Matrix4().makeRotationY(angle));
 }
@@ -75,7 +75,7 @@ export function createLayout(
     const a = vertices.get(edge.a)!;
     const b = vertices.get(edge.b)!;
     const angle = Math.atan2(b.y - a.y, b.x - a.x);
-    // Experiment only: stretch the coastal assembly consistently to keep its joins and port sockets aligned.
+    // 展示层统一拉伸海岸组件，使接缝与港口插槽保持对齐。
     const matrix = transform((a.x + b.x) / 2, (a.y + b.y) / 2, 0, angle).scale(horizontalScale);
     const port = ports.get(edge.id);
     placements.push({ asset: port ? "coast-edge-harbor" : "coast-edge", matrix });
@@ -106,7 +106,7 @@ export function createLayout(
       matrix: transform(b.x, b.y, 0, angle).scale(horizontalScale),
     });
   }
-  // Reject intersecting port envelopes, including those colliding with a different land tile.
+  // 拒绝港口占地互相重叠，或与其他陆地地块相交的布局。
   const landPolygons = config.tiles.map((tile) =>
     Array.from({ length: 6 }, (_, i) =>
       new Vector3(
@@ -151,7 +151,7 @@ export function createLayout(
     }
     for (const [i, edge] of edges.slice(0, 2).entries()) {
       const v = vertices.get(edge.a)!;
-      // Preview-only scale about the ground anchor; leave roads, terrain and layout unchanged.
+      // 仅在预览层绕地面挂点缩放建筑，道路、地形和布局不随之改变。
       placements.push({
         asset: i === 0 ? "settlement" : "city",
         color,

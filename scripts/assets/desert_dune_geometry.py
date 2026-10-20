@@ -1,7 +1,7 @@
-"""Quiet warm-sand tile: continuous curved dunes, no props or vegetation.
+"""简洁的暖沙色地块：连续弧形沙丘，不添加道具或植被。
 
-Uses geometry and vertex colors only so the sculpted surface survives GLB.
-Mounting clearings and the reserved edge strip remain exactly at z=0.
+仅使用几何体与顶点色，使雕刻表面能完整保留到 GLB。
+挂点净空区与预留边缘带严格保持 z=0。
 """
 import math
 
@@ -23,8 +23,7 @@ def main_crest(x):
 
 
 def dune_profile(distance,windward,leeward):
-    # Broad windward ramp and shorter lee slope; a gently rounded crest rather
-    # than a spherical mound or a knife-edged rocky ridge.
+    # 宽阔迎风坡与较短背风坡组成圆润沙脊，避免球形土堆或刀刃状岩脊。
     width=windward+(leeward-windward)*smooth((distance+.035)/.07)
     return math.exp(-abs(distance/width)**1.65)
 
@@ -35,7 +34,7 @@ def terrain_height(x,y):
     right=.34*math.exp(-((x-1.50)/.88)**4)*dune_profile(y-.05-.25*math.sin((x-1)*1.7),.56,.30)
     front=.16*math.exp(-(x/1.66)**6)*dune_profile(y+1.85-.12*math.cos(x*1.8),.24,.36)
     h=rear+left+right+front
-    # A handful of shallow wind ripples on one broad slope, not full-tile noise.
+    # 仅在一处宽坡上添加少量浅风纹，避免全地块噪点。
     ripple_mask=math.exp(-((x+.35)/1.15)**4-((y-.38)/.45)**4)
     h+=.008*ripple_mask*(.5+.5*math.sin(y*18+.9*math.sin(x*1.8)))
     for cx,cy,r in [(-.55,-.72,.50),(.70,-.83,.34)]:
@@ -45,7 +44,7 @@ def terrain_height(x,y):
 
 def ground_color(x,y):
     h=terrain_height(x,y)
-    # Muted amber hollows, sun-warm sand crests; no green floor or dark grime.
+    # 低饱和琥珀色凹部与暖沙色脊顶相配，不添加绿色地面或暗色污渍。
     t=max(0,min(1,.39+.34*h+.095*math.sin(x*1.3+y*.6)))
     return Vector((.47,.285,.115)).lerp(Vector((.72,.535,.285)),t)
 

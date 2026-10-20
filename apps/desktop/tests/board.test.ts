@@ -188,7 +188,7 @@ void test("scale experiment changes only building size, not anchors, roads, map 
     }
     assert.equal(buildings, 2);
     const group = assembleBoard(assets, map, true, "#b95843", scale);
-    // The renderer applies the scale to every GLB submesh, including player-color roofs.
+    // 渲染端应将缩放应用到所有 GLB 子网格，包括使用玩家颜色的屋顶。
     for (const id of ["settlement", "city"]) {
       const placement = layout.placements.find((p) => p.asset === id);
       assert.ok(placement);
@@ -227,7 +227,7 @@ void test("x/y cross experiment keeps terrain size, shared topology and content 
   const serialized = JSON.stringify(map);
   const base = createLayout(map, true);
   const previousDocument = Object.getOwnPropertyDescriptor(globalThis, "document");
-  // Only the text canvas is stubbed; all asset and placement matrices are real.
+  // 仅替换文本画布；所有资产与摆放矩阵均使用真实数据。
   Object.defineProperty(globalThis, "document", {
     configurable: true,
     value: {

@@ -1,8 +1,8 @@
-"""Resource dioramas, using the approved forest hex and review studio.
+"""资源地块微缩场景，复用已验收的森林六边形与评审摄影棚。
 
 Blender --background --python this_file -- --asset-type desert --review-dir /tmp/...
-After Computer Use review repeat with --export. --check-glb reimports the GLB.
-Only blend/GLB are delivered; all checks and renders require a temporary folder.
+通过 Computer Use 视觉评审后再加 --export 导出；--check-glb 用于回导 GLB。
+仅交付 blend/GLB，所有检查和渲染输出均使用临时目录。
 """
 import argparse
 import json
@@ -114,7 +114,7 @@ def build():
     bmesh.ops.subdivide_edges(bm,edges=list(bm.edges),cuts=2,use_grid_fill=True)
     bm.to_mesh(floor.data)
     bm.free()
-    # Keep mounting circles flat and boundary exact; inherited topology is reused.
+    # 复用已有拓扑，保持挂点圆形区域平整、地块边界精确。
     for v in floor.data.vertices:
         v.co.z = 0
     colors = floor.data.color_attributes['COLOR_0']
@@ -122,7 +122,7 @@ def build():
         for idx in p.loop_indices:
             x,y,_ = floor.data.vertices[floor.data.loops[idx].vertex_index].co
             colors.data[idx].color = (*ground_color(x,y),1)
-    # Each resource owns its silhouette; only contract and studio are shared.
+    # 每类资源使用独立轮廓，仅共享资产契约和评审摄影棚。
     build_quarry(ASSET, ROOT_OBJ, mat, box, mesh, link)
     bpy.ops.object.select_all(action='DESELECT')
     bpy.context.scene.camera = bpy.data.objects['review.board']
@@ -179,7 +179,7 @@ def render(name, camera='board'):
 
 
 def composition():
-    # Temporary test attachments, never saved into the source or exported.
+    # 测试挂载物仅临时创建，不保存到源文件或导出产物中。
     ivory = mat('TEST.ivory',(.69,.57,.36))
     charcoal = mat('TEST.charcoal',(.048,.058,.065))
     number = bpy.data.objects['anchor_number'].matrix_world.translation

@@ -127,7 +127,7 @@ void test("input maps middle rotation/right pan, ignores left drag, normalizes w
     calls.push(["zoom", px]);
   };
   let frames = 0;
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- This mock implements only the canvas APIs exercised by the input binding.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- 此替身仅实现输入绑定实际使用的画布 API。
   const element = canvas as unknown as HTMLCanvasElement;
   const binding = bindCameraInput(element, control, () => {
     frames++;

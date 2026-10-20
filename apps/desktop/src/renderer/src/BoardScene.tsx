@@ -43,7 +43,7 @@ function Models({
     board.add(numbers);
     parent.add(board);
     invalidate();
-    // Detach BEFORE disposal: otherwise a demand frame can re-upload the old textures.
+    // 先移出场景再释放资源，避免按需渲染帧重新上传旧纹理。
     return () => {
       parent.remove(board);
       numbers.userData.dispose();

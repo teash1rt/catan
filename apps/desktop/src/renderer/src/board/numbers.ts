@@ -11,7 +11,7 @@ import { anchor } from "./assembly.ts";
 import type { AssetLibrary } from "./assembly.ts";
 import { createLayout, TERRAIN_ASSETS } from "./layout.ts";
 
-// Runtime content only: models remain blank, and numbers can be removed independently.
+// 数字仅在运行时生成，模型保留空白底座，数字内容可独立移除。
 export function createNumbers(assets: AssetLibrary, config: MapConfig, tileGap = 0): Group {
   const group = new Group();
   const layout = createLayout(config, false, undefined, 1, tileGap);

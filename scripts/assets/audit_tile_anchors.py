@@ -1,7 +1,7 @@
-"""Read-only audit of every delivered tile source and GLB (Blender background).
+"""在 Blender 后台只读检查已交付地块的源文件与 GLB。
 
-Prints JSON to stdout; writes no models, renders or project logs.
-Checks actual evaluated geometry, not just anchor node names.
+向标准输出打印 JSON，不写入模型、渲染图或项目日志。
+检查求值后的实际几何体，而不只检查挂点节点名称。
 """
 import json
 import math
@@ -20,7 +20,7 @@ ANCHORS = {
 
 
 def clip_height(polygon, height, above):
-    """Clip to one horizontal half-space before testing the cylinder radius."""
+    """先将多边形裁剪到水平半空间，再检查其与圆柱半径的关系。"""
     result = []
     for a, b in zip(polygon, polygon[1:]+polygon[:1]):
         a_in = a.z >= height if above else a.z <= height

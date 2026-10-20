@@ -6,7 +6,7 @@ const files = import.meta.glob<string>("../../../../../../assets/*/model.glb", {
   query: "?url",
   import: "default",
 });
-// Theme seam: semantic asset ID -> bundled URL. No absolute disk paths or filename-based game rules.
+// 主题映射将语义化资产 ID 转为打包 URL，避免依赖磁盘绝对路径或用文件名定义玩法。
 export const theme = Object.fromEntries(
   Object.entries(files).map(([path, url]) => [path.split("/").at(-2)!, url]),
 );

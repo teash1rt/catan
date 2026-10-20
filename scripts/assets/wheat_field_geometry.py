@@ -1,7 +1,7 @@
-"""Golden strip-fields and a small half-timbered mill; shared hex contract.
+"""金色条带麦田与小型半木构风磨，遵循共享六边形契约。
 
-Wheat grows as reusable three-stalk clumps in curved rows. Broad warm color
-groups and low rolling terrain matter more than individual grain density.
+麦穗以可复用的三株草丛沿弧形田垄种植。
+优先保证大块暖色分组和低缓地形起伏，再考虑单株谷粒密度。
 """
 import math
 import random
@@ -31,7 +31,7 @@ def terrain_height(x, y):
     for cx,cy,r in [(-.55,-.72,.50),(.70,-.83,.34)]:
         t=max(0,min(1,(math.hypot(x-cx,y-cy)-r-.15)/.28))
         h*=t*t*(3-2*t)
-    # Mill rests on its own level footing; seam remains flat.
+    # 风磨使用独立平整地基，地块接缝保持平整。
     t=max(0,min(1,(math.hypot(x-1.13,y-1.20)-.65)/.3))
     h*=t*t*(3-2*t)
     return h*max(0,min(1,(2.31-edge(x,y))/.18))
@@ -69,7 +69,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
             x,y,_=floor.data.vertices[floor.data.loops[idx].vertex_index].co
             colors.data[idx].color=(*ground_color(x,y),1)
 
-    # Three variants share meshes across the entire field, not one object/ear.
+    # 三种原型在整片麦田中共享网格，避免每个麦穗独立创建对象。
     prototypes=[]
     for variant in range(3):
         verts,faces,indices=[],[],[]
@@ -101,7 +101,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
             base=Vector((x,y,0))
             tip=base+lean+Vector((0,0,h))
             stem(base,tip,.012)
-            # A broad pointed blade, plus a plump ordered ear: no fuzzy awn cloud.
+            # 使用宽阔尖叶和饱满整齐的麦穗，避免密集细芒产生毛糙噪点。
             mid=base.lerp(tip,.43)
             shape([mid,mid+Vector((-.11,-.015,.09)),mid+Vector((-.16,0,.14)),mid+Vector((-.07,.024,.09))],[(0,1,2),(0,2,3)],1)
             for k in range(3):
@@ -114,8 +114,8 @@ def build_quarry(asset, root, mat, box, mesh, link):
         prototypes.append(ob.data)
         bpy.data.objects.remove(ob,do_unlink=True)
 
-    # Flowing planted strips fill the rim, but a single farm lane and mounting
-    # clearing stay open. Leave generous margins for the complete bent clump.
+    # 流动的条带田垄延伸到边缘，同时保留一条农路和挂点净空区。
+    # 为整簇弯曲麦株预留足够边距。
     planted=0
     for row in range(23):
         x=-2.40+row*.215
@@ -131,7 +131,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
                 continue
             if any(math.hypot(xx-cx,yy-cy)<r+.28 for cx,cy,r in [(-.55,-.72,.5),(.70,-.83,.34)]):
                 continue
-            # Front is a harvested forecourt, not a ring of unnecessary props.
+            # 前景表现为已收割的场地，避免围满无关道具。
             if math.hypot((xx+.14)*1.1,yy+1.65)<.46:
                 continue
             band=math.sin(xx*1.6+yy*1.8)
@@ -145,8 +145,8 @@ def build_quarry(asset, root, mat, box, mesh, link):
             planted+=1
     print('WHEAT_CLUMPS',planted)
 
-    # Small post-mill: stone footing, tapered timber framed house, warm shingle
-    # hood and four linen-covered lattice sweeps. Milling is subordinate to crop.
+    # 小型柱式风磨采用石基、收尖木构屋体、暖色木瓦顶和四片覆亚麻布的格架风翼。
+    # 风磨作为辅助元素，麦田仍是主体。
     cx,cy=1.13,1.20
     box('mill.footing',(cx,cy,.09),(.91,.82,.18),stone,.055)
     box('mill.house',(cx,cy,.80),(.73,.65,1.24),plaster,.025)
@@ -168,12 +168,12 @@ def build_quarry(asset, root, mat, box, mesh, link):
     box('mill.window',(cx+.383,cy,1.07),(.022,.21,.23),dark,.025)
     beam('mill.window-mullion',(cx+.40,cy,.96),(cx+.40,cy,1.18),.025,grain)
 
-    # Solid pitched cap, four courses of shingles instead of a paper-thin roof.
+    # 坡屋顶具有真实厚度，并铺设四层木瓦。
     v=[(cx-.49,cy-.45,1.40),(cx+.49,cy-.45,1.40),(cx+.49,cy+.45,1.40),(cx-.49,cy+.45,1.40),
        (cx,cy-.45,1.78),(cx,cy+.45,1.78)]
     mesh('mill.roof-core',v,[(0,1,4),(3,5,2),(0,4,5,3),(1,2,5,4),(0,3,2,1)],roofm,[0,0,1,0,0])
     def roof_point(side,t,y):
-        # A shallow droop softens the eaves; color variation is subordinate.
+        # 檐口轻微下垂以柔化轮廓，颜色变化保持克制。
         return (cx+side*.53*(1-t),y,1.425+.47*t-.055*math.sin(math.pi*t)+.009)
 
     for side in [-1,1]:
@@ -201,7 +201,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
         beam('mill.sail-spar',hub+radial*.08,hub+radial*1.02,.038,wood)
         a=hub+radial*.38
         b=hub+radial*1.00
-        # A offset cloth panel leaves its supporting spar visible.
+        # 布片略微偏置，使支撑帆杆仍然可见。
         pts=[a+tangent*.035,b+tangent*.035,b+tangent*.215,a+tangent*.215,
              a.lerp(b,.5)+tangent*.125-Vector((0,.035,0))]
         cloth=mesh('mill.sail-linen',pts,[(0,1,4),(1,2,4),(2,3,4),(3,0,4)],[linen])
@@ -215,8 +215,8 @@ def build_quarry(asset, root, mat, box, mesh, link):
             beam('mill.sail-rib',p,p+tangent*.23,.016,grain)
     box('mill.hub',hub-Vector((0,.05,0)),(.15,.10,.15),grain,.028,angle=0)
 
-    # A clustered harvest stook gives the foreground a use without filling the
-    # number/robber clearing. Silhouettes vary; they are not scattered props.
+    # 成组麦捆为前景提供用途，同时避开数字牌与强盗净空区。
+    # 通过不同轮廓表现变化，避免散乱摆放。
     for x,y,s in [(-.39,-1.65,.94),(-.14,-1.79,.82),(-.10,-1.52,1.02)]:
         z=terrain_height(x,y)
         for j in range(7):
@@ -231,7 +231,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
         belt.name='harvest.binding'
         belt.data.materials.append(wood)
 
-    # Soft sewn sacks beside the mill: rings pinch toward the tied neck.
+    # 风磨旁的软布袋通过逐渐收紧的截面环表现扎口袋颈。
     for x,y,s in [(1.62,.81,1),(1.65,1.10,.79)]:
         z=terrain_height(x,y)
         vv=[]
@@ -250,7 +250,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
         link(bpy.context.object).data.materials.append(wood)
         bpy.context.object.name='harvest.sack-tie'
 
-    # Two short weathered fence runs, interrupted rather than a toy perimeter.
+    # 两段短旧木栏间隔布置，避免完整围圈的玩具感。
     for points in [[(-2.05,.27),(-1.99,.73),(-1.80,1.18)],[(-.70,1.92),(-.23,2.02),(.23,1.98)]]:
         for x,y in points:
             z=terrain_height(x,y)
@@ -259,7 +259,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
             for h in [.22,.48]:
                 beam('field.fence-rail',(x,y,terrain_height(x,y)+h),(u,v,terrain_height(u,v)+h-.02),.040,grain)
 
-    # Muted olive leaves at a handful of transitions, not a green resource floor.
+    # 少量过渡位置使用低饱和橄榄色叶片，避免将资源地面铺成绿色。
     for x,y in [(-2.10,-.30),(-1.85,.87),(-.63,1.89),(.30,1.97),(1.67,.64),(1.80,.10),(1.39,-1.36),(-1.18,-1.78)]:
         z=terrain_height(x,y)
         vv,ff=[],[]
@@ -275,7 +275,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
             ff.extend([(n,n+1,n+2),(n,n+2,n+3)])
         mesh('field.margin-leaves',vv,ff,[herb])
 
-    # Cut straw lies in a few directional swaths around the stook only.
+    # 割下的麦秆仅在麦捆周围按少量方向性条带铺放。
     for j in range(26):
         x=rng.uniform(-.70,.16)
         y=rng.uniform(-2.04,-1.52)
@@ -293,8 +293,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
         bpy.ops.object.join()
         parts[0].name=prefix+'assembly'
         if prefix=='mill.':
-            # Compress the entire coherent assembly, including sails, around
-            # its footing; no detached beam/door/roof transforms.
+            # 以地基为中心整体压缩组件，包括风翼，避免梁、门和屋顶发生独立错位。
             ob=parts[0]
             inv=ob.matrix_world.inverted()
             for v in ob.data.vertices:

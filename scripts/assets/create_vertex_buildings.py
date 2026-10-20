@@ -1,8 +1,8 @@
-"""Create modular medieval buildings in a temporary directory, then review/export.
+"""在临时目录中创建模块化中世纪建筑，再进行评审与导出。
 
 Blender --background --python-exit-code 1 --python scripts/assets/create_vertex_buildings.py
     -- --work-dir /private/tmp/... --mode build|export|composition
-Only manually promote reviewed pairs; never overwrite canonical assets here.
+仅手动归档通过评审的源文件与 GLB，不在此处覆盖正式资产。
 """
 import argparse
 import json
@@ -89,7 +89,7 @@ def gable(name, x, y, width, depth, eave, peak, mat):
 
 
 def roof(x, y, width, depth, eave, peak, rows=6):
-    """Thick staggered tile courses, one recolorable material, no checkerboard."""
+    """厚瓦错缝铺设，共用一种可换色材质，避免棋盘格配色。"""
     for sign in [-1,1]:
         for row in range(rows):
             t0 = max(0, row/rows-.016)
@@ -160,7 +160,7 @@ def settlement():
     foundation(3.55,3.35)
     box('house.warm-plaster',(0,.10,1.72),(2.80,2.55,2.97),M['plaster'],.05)
     gable('house.gable',0,.10,2.8,2.55,3.2,4.78,M['plaster'])
-    # Ground-floor stone plinth and upper-storey jetty.
+    # 底层使用石质台基，上层采用外挑结构。
     box('house.stone-plinth',(0,.10,.43),(2.93,2.66,.38),M['stone'])
     for z in [.63,1.70,3.17]:
         box('house.front-rail',(0,-1.207,z),(2.96,.13,.13),M['wood'])
@@ -175,7 +175,7 @@ def settlement():
             beam('house.side-post',(x,y,.58),(x,y,3.18),.12,M['wood'])
         for a,b in [(-1.15,-.57),(.73,1.35)]:
             beam('house.side-brace',(x,a,1.81),(x,b,2.37),.10,M['wood'])
-        # Windows on both side walls, shallow but visibly framed.
+        # 两侧墙面均设置浅窗洞，并保留清晰窗框。
         for y in [-.56,.71]:
             box('side-window.recess',(x*1.014,y,2.52),(.04,.42,.63),M['shadow'])
             for dy in [-.245,0,.245]:
@@ -186,7 +186,7 @@ def settlement():
         window(x,1.472,2.0,.62,.87)
     door(-.47,-1.28,.26,.75,1.32)
     window(.80,-1.272,.88,.50,.59)
-    # Pediment framing: strongly medieval silhouette, no random clutter.
+    # 山墙木构强化中世纪建筑轮廓，控制无关装饰。
     for y in [-1.23,1.43]:
         beam('gable.king-post',(0,y,3.2),(0,y,4.76),.13,M['wood'])
         for s in [-1,1]:
@@ -203,7 +203,7 @@ def settlement():
 
 def city():
     foundation(3.86,3.35)
-    # Asymmetric civic house + fortified gate-tower, not a scaled-up village.
+    # 城市由不对称公共建筑和防御门塔组成，形成区别于村庄的轮廓。
     tx,ty=-.78,-.24
     box('tower.limestone-body',(tx,ty,2.04),(1.70,2.22,3.57),M['stone'],.055)
     for z in [.51,1.05,1.64,2.23,2.82,3.42]:
@@ -214,7 +214,7 @@ def city():
                 box('tower.corner-quoin',(x,y,.68+i*.52),(.27,.29,.31),M['stone_light'],.025)
     door(tx,ty-1.15,.27,1.03,1.78,stone=True)
     window(tx,ty-1.155,2.63,.51,.86)
-    # Jetty gallery with paired lancets and substantial corbels.
+    # 外挑廊道搭配成对尖拱窗和厚实托梁。
     box('tower.gallery-overhang',(tx,ty,3.83),(1.94,2.45,.24),M['stone_light'])
     box('tower.upper-plaster',(tx,ty,4.48),(1.86,2.35,1.19),M['plaster'])
     for x in [tx-.80,tx,tx+.80]:
@@ -234,7 +234,7 @@ def city():
                 box('tower.side-mullion',(x,y+dy,4.46),(.055,.038,.70),M['honey'] if dy==0 else M['wood'])
             box('tower.side-sill',(x,y,4.10),(.14,.56,.09),M['stone_light'])
     box('tower.upper-beam',(tx,ty,5.095),(1.96,2.46,.14),M['wood'])
-    # Four-sided steep cap with overlapping courses: a different city silhouette.
+    # 四面陡坡屋顶采用重叠瓦层，形成独立的城市轮廓。
     for row in range(8):
         t0=max(0,row/8-.014); t1=(row+1)/8
         r0=1.20*(1-t0)+.075; r1=1.20*(1-t1)+.045
@@ -249,9 +249,9 @@ def city():
                 verts += [(x,y,z-.045) for x,y,z in verts]
                 mesh('tower.hipped-tile',verts,[(0,1,2,3),(4,7,6,5),(0,4,5,1),(1,5,6,2),(2,6,7,3),(3,7,4,0)],M['player'],.012)
     beam('tower.finial',(tx,ty,6.59),(tx,ty,7.24),.055,M['iron'])
-    # Compact cloth pennant remains inside the agreed circular footprint.
+    # 紧凑的布旗保持在约定的圆形占地内。
     mesh('tower.player-pennant',[(tx,ty,7.19),(tx+.62,ty+.025,7.12),(tx+.46,ty+.01,6.91),(tx,ty,6.94)],[(0,1,2,3)],M['player'])
-    # Lower timber-framed hall, attached directly to the gate tower.
+    # 较低的木构大厅直接连接门塔。
     hx,hy=.92,.22
     box('hall.plaster',(hx,hy,1.79),(1.38,2.55,3.09),M['plaster'],.045)
     gable('hall.gable',hx,hy,1.38,2.55,3.30,4.42,M['plaster'])
@@ -342,7 +342,7 @@ def build(kind):
         ('iron','building.blackened-iron',(.055,.065,.070))]}
     M['player']['role']='player_color'; M['player']['input']='linear RGB baseColorFactor'
     (settlement if kind=='settlement' else city)()
-    # Bake bevels before unit conversion; source retains named editable components.
+    # 单位转换前先烘焙倒角，源文件保留具名且可编辑的组件。
     for obj in list(ASSET.objects):
         bpy.context.view_layer.objects.active=obj
         for mod in list(obj.modifiers): bpy.ops.object.modifier_apply(modifier=mod.name)
@@ -365,7 +365,7 @@ def export(kind):
     bpy.ops.wm.open_mainfile(filepath=str(WORK/(kind+'.blend')))
     col=bpy.data.collections['ASSET_'+kind]
     root=bpy.data.objects[kind]
-    # Group into reusable neutral body + separately tintable roof/flag mesh.
+    # 拆分为可复用的中性主体和可独立换色的屋顶、旗帜网格。
     for colored in [False,True]:
         items=[o for o in col.objects if o.type=='MESH' and any(m.name=='player_color' for m in o.data.materials)==colored]
         bpy.ops.object.select_all(action='DESELECT')
@@ -380,7 +380,7 @@ def export(kind):
     target=WORK/(kind+'.glb')
     bpy.ops.export_scene.gltf(filepath=str(target),export_format='GLB',use_selection=True,export_extras=True,export_yup=True,export_cameras=False,export_lights=False)
     for obj in list(col.objects): bpy.data.objects.remove(obj,do_unlink=True)
-    # Remove orphaned source materials so imported contract names stay exact.
+    # 清理无引用的源材质，确保导入后的材质名称符合契约。
     for data in list(bpy.data.meshes):
         if data.users==0: bpy.data.meshes.remove(data)
     for mat in list(bpy.data.materials):
@@ -389,7 +389,7 @@ def export(kind):
     imported=set(bpy.data.objects)-before
     check(imported,kind+'-glb')
     render(kind+'-glb')
-    # Isolated instances: only clone player materials, never mutate a shared one.
+    # 实例之间隔离玩家材质：仅复制玩家材质，不修改共享原材质。
     roots=[o for o in imported if o.parent not in imported]
     assert len(roots)==1
     original=roots[0]; original.location.x=-.96
@@ -410,7 +410,7 @@ def export(kind):
 
 def composition():
     bpy.ops.wm.read_factory_settings(use_empty=True); studio()
-    # One shared vertex for three adjoining flat-top hexes, not three buildings.
+    # 三个相邻的平顶六边形共用一个顶点，该位置仅放置一栋建筑。
     centers=[(-3,0),(1.5,3*math.sqrt(3)/2),(1.5,-3*math.sqrt(3)/2)]
     for kind,xy in zip(['forest','wheat','sheep'],centers):
         before=set(bpy.data.objects)

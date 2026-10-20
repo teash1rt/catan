@@ -1,7 +1,7 @@
-"""Rolling spring pasture with reusable sheep, a thatched fold and dry walls.
+"""起伏的春季牧场，包含可复用羊群、茅草羊圈与干砌石墙。
 
-Shared flat-top hex/mounting contract; no gameplay or presentation nodes.
-The large continuous meadow comes first, clustered husbandry details second.
+遵循共享的平顶六边形与挂点契约，不包含玩法或展示辅助节点。
+以大块连续草地为主体，畜牧细节成组布置并作为辅助。
 """
 import math
 import random
@@ -53,7 +53,7 @@ def smooth(t):
 
 def terrain_height(x, y):
     h=raw_height(x,y)
-    # Gentle resting pads put every shared animal's four hooves on the ground.
+    # 轻微平整的落脚区使每个共享动物实例的四蹄都能贴地。
     for cx,cy,_,scale,_ in FLOCK:
         w=1-smooth((math.hypot(x-cx,y-cy)-.28*scale)/.22)
         h=h*(1-w)+raw_height(cx,cy)*w
@@ -96,8 +96,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
         ob.name=name
         for v in ob.data.vertices:
             p=v.co.copy()
-            # One continuous fleece skin with shallow rounded locks; never a
-            # ball pile, photographic fur or thousands of separate wool curls.
+            # 羊毛使用连续表皮与浅而圆润的卷纹，避免球体堆叠、写实毛发或大量独立毛卷。
             puff=1+.15*noise(p*7.5)+.04*noise(p*16) if fleece else 1
             v.co=Vector((p.x*scale[0],p.y*scale[1],p.z*scale[2]))*puff
         ob.data.materials.append(material)
@@ -125,8 +124,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
             x,y,_=floor.data.vertices[floor.data.loops[idx].vertex_index].co
             colors.data[idx].color=(*ground_color(x,y),1)
 
-    # Anatomical silhouettes: plump fleece barrel, narrow uncovered face,
-    # lateral ears, four distinct legs, small split hooves and a short tail.
+    # 轮廓包含饱满羊毛躯干、狭窄裸脸、侧耳、四条独立腿、小分蹄和短尾。
     prototypes=[]
     for pose in range(2):
         before=set(asset.objects)
@@ -151,7 +149,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
         tail=ellipsoid('sheep.tail',(-.29,0,.30),(.10,.058,.10),wool,True)
         tail.rotation_euler.y=-.6
         ob=join_parts(list(set(asset.objects)-before),'sheep.prototype')
-        # Bake prototype origin and transforms for predictable linked instances.
+        # 烘焙原型的原点和变换，使关联实例的结果保持可预测。
         transform=ob.matrix_world.copy()
         for v in ob.data.vertices:
             v.co=transform @ v.co
@@ -166,8 +164,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
         ob.rotation_euler.z=angle
         ob.scale=(scale,scale,scale)
 
-    # Low, broad medieval fold. Its small footprint supports the pastoral scene;
-    # it is not a tall second windmill or a modern industrial shed.
+    # 羊圈采用低矮宽阔的中世纪造型，以小占地辅助牧场场景，避免高塔或工业棚屋轮廓。
     cx,cy=1.04,1.10
     box('fold.foundation',(cx,cy,.065),(1.17,.94,.13),stones[1],.04)
     box('fold.house',(cx,cy,.405),(1.04,.80,.68),plaster,.025)
@@ -178,7 +175,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
         for y in [cy-.412,cy+.412]:
             beam('fold.rail',(cx-.55,y,z),(cx+.55,y,z),.060,wood)
     box('fold.shadow-door',(cx-.12,cy-.417,.36),(.42,.025,.50),recess,.07)
-    # Half-open low gate and hinges reveal a dark shelter, not a painted door.
+    # 半开的低门与铰链露出内部暗处，门体使用真实几何结构。
     for i in range(4):
         box('fold.gate-plank',(cx-.27+i*.10,cy-.451,.255),(.088,.035,.28),timber,.008)
     beam('fold.gate-brace',(cx-.31,cy-.48,.15),(cx+.03,cy-.48,.36),.036,wood)
@@ -188,8 +185,8 @@ def build_quarry(asset, root, mat, box, mesh, link):
     for yy in [cy-.08,cy,cy+.08]:
         beam('fold.window-slat',(cx+.55,yy,.36),(cx+.55,yy,.60),.026,timber)
 
-    # Sculpted thatch cap: a continuous softly bowed surface with an actual
-    # thick eave. Fine straw streaks run with the slope, not checkerboard tiles.
+    # 茅草屋顶采用连续微弯的厚曲面与真实厚檐。
+    # 细草纹沿坡向排列，避免形成棋盘式瓦格。
     for side in [-1,1]:
         vv=[]
         for j in range(17):
@@ -204,7 +201,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
         bm=bmesh.new(); bm.from_mesh(ob.data)
         bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces))
         bm.to_mesh(ob.data); bm.free()
-        # Correct both open slope orientations before adding thickness.
+        # 添加厚度前，先校正两侧开放坡面的朝向。
         if sum(p.normal.z for p in ob.data.polygons)<0:
             for p in ob.data.polygons:
                 p.flip()
@@ -223,14 +220,13 @@ def build_quarry(asset, root, mat, box, mesh, link):
             for a,b in zip(pts,pts[1:]):
                 beam('fold.thatch-straw',a,b,.012,thatch[0 if j%3==0 else 2])
     beam('fold.bound-ridge',(cx,cy-.56,1.192),(cx,cy+.56,1.192),.065,thatch[0])
-    # Small triangular infill beneath each gable.
+    # 每个山墙下方添加小型三角填充面。
     for yy in [cy-.408,cy+.408]:
         mesh('fold.gable',[(cx-.50,yy,.73),(cx+.50,yy,.73),(cx,yy,1.12)],[(0,1,2)],[plaster])
         beam('fold.gable-tie',(cx-.49,yy,.74),(cx+.49,yy,.74),.055,wood)
         beam('fold.gable-post',(cx,yy,.75),(cx,yy,1.10),.044,wood)
 
-    # Winding low dry-stone boundary: stones bed into the same hill rather
-    # than floating in a ring around the entire tile.
+    # 蜿蜒的低矮干砌石墙嵌入同一坡地，避免围绕整个地块悬浮成圈。
     wall=[(-1.94,.91),(-1.67,1.37),(-1.22,1.76),(-.68,1.94),(-.10,1.98)]
     for (x,y),(u,v) in zip(wall,wall[1:]):
         length=math.hypot(u-x,v-y); angle=math.atan2(v-y,u-x)
@@ -245,7 +241,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
                 for vert in ob.data.vertices:
                     vert.co*=1+.12*noise(vert.co*14+Vector((j,course,2)))
 
-    # Split rail near the fold, with a usable opening into the grazing area.
+    # 羊圈附近设置分段木栏，并保留通向放牧区的可用开口。
     for points in [[(1.90,.56),(2.04,.09),(1.99,-.35)], [(-2.06,-.63),(-1.92,-1.12)]]:
         for x,y in points:
             z=terrain_height(x,y)
@@ -254,7 +250,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
             for h in [.19,.37]:
                 beam('pasture.fence-rail',(x,y,terrain_height(x,y)+h),(u,v,terrain_height(u,v)+h),.045,timber)
 
-    # A carved trough and hay rack explain the small work yard beside the fold.
+    # 雕刻水槽与草料架，表现羊圈旁的小型作业场地。
     x,y=1.27,.46; z=terrain_height(x,y)
     box('fold.trough-base',(x,y,z+.09),(.50,.26,.12),stones[0],.035)
     for yy in [y-.12,y+.12]:
@@ -269,8 +265,8 @@ def build_quarry(asset, root, mat, box, mesh, link):
             beam('fold.hayrack-slat',(xx,.74,.16),(xx,yy,.37),.028,timber)
     ellipsoid('fold.fodder',(1.75,.74,.28),(.17,.075,.11),thatch[2])
 
-    # Reusable meadow tufts, dense in selected curved patches and grazed short
-    # around the flock/path. Broad blades read better than a noisy particle lawn.
+    # 可复用草丛在选定弧形区域密集分布，羊群和路径周围保持低矮。
+    # 使用宽叶片保证轮廓清晰，避免粒子草坪式噪点。
     tufts=[]
     for variant in range(3):
         vv=[]; ff=[]; ids=[]
@@ -302,7 +298,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
         ob.rotation_euler.z=rng.random()*math.tau
         s=rng.uniform(.65,1.20); ob.scale=(s,s,s)
 
-    # Buttercups grow in three sheltered patches, never evenly sprinkled noise.
+    # 毛茛集中生长在三处避风区域，避免均匀散布。
     for cx,cy in [(-1.74,.28),(-.83,1.77),(1.33,-1.58)]:
         for j in range(7):
             x=cx+rng.uniform(-.15,.15); y=cy+rng.uniform(-.13,.13)
@@ -318,7 +314,7 @@ def build_quarry(asset, root, mat, box, mesh, link):
         parts=[o for o in asset.objects if o.type=='MESH' and o.name.startswith(prefix)]
         if parts:
             join_parts(parts,prefix+'assembly')
-    # Consistent outward normals on all closed custom components.
+    # 所有封闭自定义组件的法线保持一致朝外。
     for data in {o.data for o in asset.objects if o.type=='MESH' and not o.name.startswith('terrain.')}:
         bm=bmesh.new(); bm.from_mesh(data)
         bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces))
