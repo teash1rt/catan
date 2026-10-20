@@ -10,6 +10,8 @@
     "dev": "pnpm --filter @catan/desktop dev",
     "lint": "oxlint . --deny-warnings",
     "lint:fix": "oxlint . --fix --deny-warnings",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
     "test": "pnpm --filter @catan/protocol build && pnpm -r --if-present test",
     "typecheck": "pnpm --filter @catan/protocol build && pnpm --filter @catan/game-core build && tsc --noEmit --project tsconfig.json && pnpm -r --if-present typecheck"
   },
@@ -33,6 +35,7 @@
     "@types/node": "26.6.4",
     "oxlint": "1.87.0",
     "oxlint-tsgolint": "7.0.2003",
+    "prettier": "3.9.10",
     "typescript": "7.0.2"
   }
 }
