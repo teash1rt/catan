@@ -116,7 +116,7 @@ function shuffle<T>(values: readonly T[], random: () => number): T[] {
 }
 const red = (number: number | null | undefined): boolean => number === 6 || number === 8;
 
-/** 仅用于本地预览；后续联机地图由服务端房间权威生成。 */
+/** 根据固定种子生成经典地图；后续联机时由服务端房间权威调用。 */
 export function createClassicMap(seed: number): MapConfig {
   const random = randomSource(seed);
   const cells = classicCells();
