@@ -3,7 +3,9 @@ import fs from "node:fs";
 import test from "node:test";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { InstancedMesh, Matrix4, Mesh, MeshStandardMaterial, Vector3 } from "three";
-import type { Object3D } from "three";
+import type { Material, Object3D } from "three";
+import { piecePreview, targetMarker } from "../src/renderer/src/board/feedback.ts";
+import { boardTargets } from "../src/renderer/src/board/interaction.ts";
 import { createClassicMap } from "@catan/game-core";
 import {
   BOARD_PRESENTATION,
@@ -357,4 +359,87 @@ void test("x/y cross experiment keeps terrain size, shared topology and content 
   for (const gap of [-0.1, 2.1, NaN, Infinity])
     assert.throws(() => createLayout(map, true, "#b95843", 2.5, gap));
   assert.throws(() => createLayout(map, true, "#b95843", 5.1));
+});
+
+void test("preview reuses GLB geometry, isolates materials and disposes only owned resources", () => {
+  const layout = createLayout(createClassicMap(42), false, undefined, undefined, 0.4);
+  const targets = boardTargets(layout);
+  for (const assetId of ["road", "settlement", "city"] as const) {
+    const target = targets.find(
+      (candidate) => candidate.kind === (assetId === "road" ? "edge" : "vertex"),
+    );
+    assert.ok(target);
+    const source = assets.get(assetId);
+    assert.ok(source);
+    const meshes: Mesh[] = [];
+    source.traverse((node) => {
+      if (node instanceof Mesh) {
+        meshes.push(node);
+      }
+    });
+    let sourceDisposals = 0;
+    const disposed = (): void => {
+      sourceDisposals++;
+    };
+    for (const mesh of meshes) {
+      mesh.geometry.addEventListener("dispose", disposed);
+      for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+        material.addEventListener("dispose", disposed);
+      }
+    }
+    const red = piecePreview(assets, assetId, target, "#b95843", 5);
+    const blue = piecePreview(assets, assetId, target, "#3b7295", 5);
+    assert.equal(red.children.length, meshes.length);
+    assert.equal(blue.children.length, meshes.length);
+    const expected = target.matrix.clone();
+    if (assetId !== "road") {
+      expected.scale(new Vector3(5, 5, 5));
+    }
+    assert.ok(red.matrix.equals(expected));
+    const previewMaterials = new Set<Material>();
+    let previewDisposals = 0;
+    for (const [index, original] of meshes.entries()) {
+      const preview = red.children[index];
+      const other = blue.children[index];
+      assert.ok(preview instanceof Mesh && other instanceof Mesh);
+      assert.equal(preview.geometry, original.geometry);
+      assert.ok(preview.matrix.equals(original.matrixWorld));
+      const originalMaterials = Array.isArray(original.material)
+        ? original.material
+        : [original.material];
+      const redMaterials = Array.isArray(preview.material) ? preview.material : [preview.material];
+      const blueMaterials = Array.isArray(other.material) ? other.material : [other.material];
+      for (const [materialIndex, material] of redMaterials.entries()) {
+        assert.notEqual(material, originalMaterials[materialIndex]);
+        assert.notEqual(material, blueMaterials[materialIndex]);
+        assert.equal(material.transparent, true);
+        assert.equal(material.depthWrite, false);
+        assert.ok(material.opacity > 0 && material.opacity < 1);
+        if (!previewMaterials.has(material)) {
+          material.addEventListener("dispose", () => {
+            previewDisposals++;
+          });
+          previewMaterials.add(material);
+        }
+        if (material instanceof MeshStandardMaterial && material.name === "player_color") {
+          const blueMaterial = blueMaterials[materialIndex];
+          assert.ok(blueMaterial instanceof MeshStandardMaterial);
+          assert.equal(material.color.getHexString(), "b95843");
+          assert.equal(blueMaterial.color.getHexString(), "3b7295");
+        }
+      }
+    }
+    red.userData.dispose();
+    blue.userData.dispose();
+    assert.equal(previewDisposals, previewMaterials.size);
+    assert.equal(sourceDisposals, 0);
+    const marker = targetMarker(target, true);
+    marker.userData.dispose();
+    for (const mesh of meshes) {
+      mesh.geometry.removeEventListener("dispose", disposed);
+      for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+        material.removeEventListener("dispose", disposed);
+      }
+    }
+  }
 });

@@ -24,6 +24,7 @@ export type Placement = { asset: string; matrix: Matrix4; tileId?: string; color
 export type BoardLayout = {
   placements: Placement[];
   tiles: Map<string, Matrix4>;
+  slots: { vertices: Map<string, Matrix4>; edges: Map<string, Matrix4> };
   coastCount: number;
 };
 // 布局计算使用 Blender XY 坐标，仅在此处转换为 GLB 已采用的 Y-up 坐标。
@@ -55,6 +56,21 @@ export function createLayout(
     ]),
   );
   const tiles = new Map<string, Matrix4>();
+  const slots = {
+    vertices: new Map([...vertices].map(([id, v]) => [id, transform(v.x, v.y)])),
+    edges: new Map(
+      topology.edges.map((edge) => {
+        const a = vertices.get(edge.a)!;
+        const b = vertices.get(edge.b)!;
+        return [
+          edge.id,
+          transform((a.x + b.x) / 2, (a.y + b.y) / 2, 0, Math.atan2(b.y - a.y, b.x - a.x)).scale(
+            new Vector3(spacing, 1, 1),
+          ),
+        ];
+      }),
+    ),
+  };
   const placements: Placement[] = [];
   for (const tile of config.tiles) {
     const matrix = transform(
@@ -136,30 +152,25 @@ export function createLayout(
   if (showPieces) {
     const edges = topology.edges.filter((edge) => edge.tileIds.length === 2).slice(0, 3);
     for (const edge of edges) {
-      const a = vertices.get(edge.a)!;
-      const b = vertices.get(edge.b)!;
       placements.push({
         asset: "road",
         color,
-        matrix: transform(
-          (a.x + b.x) / 2,
-          (a.y + b.y) / 2,
-          0,
-          Math.atan2(b.y - a.y, b.x - a.x),
-        ).scale(new Vector3(spacing, 1, 1)),
+        matrix: slots.edges.get(edge.id)!,
       });
     }
     for (const [i, edge] of edges.slice(0, 2).entries()) {
-      const v = vertices.get(edge.a)!;
       // 仅在预览层绕地面挂点缩放建筑，道路、地形和布局不随之改变。
       placements.push({
         asset: i === 0 ? "settlement" : "city",
         color,
-        matrix: transform(v.x, v.y).scale(new Vector3(buildingScale, buildingScale, buildingScale)),
+        matrix: slots.vertices
+          .get(edge.a)!
+          .clone()
+          .scale(new Vector3(buildingScale, buildingScale, buildingScale)),
       });
     }
   }
-  return { placements, tiles, coastCount: topology.coast.length };
+  return { placements, tiles, slots, coastCount: topology.coast.length };
 }
 
 export function polygonsOverlap(a: Vector3[], b: Vector3[]): boolean {

@@ -6,6 +6,18 @@ import type { RenderStats } from "./BoardScene.tsx";
 import { loadAssets } from "./board/assets.ts";
 import type { AssetLibrary } from "./board/assembly.ts";
 import { BOARD_PRESENTATION } from "./board/layout.ts";
+import type { BoardSelection } from "./BoardInteraction.tsx";
+import type { InteractionMode } from "./board/interaction.ts";
+import { DEFAULT_HIGHLIGHT_PALETTE } from "./board/palettes.ts";
+import { HighlightControls } from "./HighlightControls.tsx";
+
+const INTERACTION_MODES: readonly [InteractionMode, string][] = [
+  ["select", "选择"],
+  ["road", "道路"],
+  ["settlement", "村庄"],
+  ["city", "城市"],
+];
+const TARGET_LABELS = { tile: "地块", edge: "边", vertex: "顶点" } as const;
 
 function newSeed(): number {
   return crypto.getRandomValues(new Uint32Array(1))[0] ?? 0;
@@ -43,6 +55,9 @@ export function App(): React.JSX.Element {
   const [color, setColor] = useState("#b95843");
   const [debugOpen, setDebugOpen] = useState(true);
   const [stats, setStats] = useState<RenderStats | null>(null);
+  const [mode, setMode] = useState<InteractionMode>("select");
+  const [selection, setSelection] = useState<BoardSelection>(null);
+  const [palette, setPalette] = useState(DEFAULT_HIGHLIGHT_PALETTE);
   const onStats = useCallback((value: RenderStats) => setStats(value), []);
   useEffect(() => {
     let active = true;
@@ -85,6 +100,9 @@ export function App(): React.JSX.Element {
       data-draw-calls={stats?.calls}
       data-textures={stats?.textures}
       data-geometries={stats?.geometries}
+      data-interaction-mode={mode}
+      data-selected-kind={selection?.kind}
+      data-selected-id={selection?.id}
     >
       <section className="map-panel" aria-label="三维卡坦地图">
         <SceneBoundary>
@@ -97,6 +115,9 @@ export function App(): React.JSX.Element {
               {...BOARD_PRESENTATION}
               reset={reset}
               onStats={onStats}
+              mode={mode}
+              onSelection={setSelection}
+              palette={palette}
             />
           )}
         </SceneBoundary>
@@ -132,11 +153,28 @@ export function App(): React.JSX.Element {
               复位视角
             </button>
           </div>
+          <div className="interaction-modes" role="group" aria-label="棋盘交互模式">
+            {INTERACTION_MODES.map(([value, label]) => (
+              <button
+                key={value}
+                aria-pressed={mode === value}
+                disabled={!assets}
+                onClick={() => setMode(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <p className="selection-status" aria-live="polite">
+            {selection ? `已选${TARGET_LABELS[selection.kind]} · ${selection.id}` : "尚未选中位置"}
+          </p>
+          {mode !== "select" && <p className="preview-hint">仅预览外观，暂不判断建造规则</p>}
+          <HighlightControls palette={palette} onChange={setPalette} />
           <label className="piece-toggle">
             <input type="checkbox" checked={pieces} onChange={(e) => setPieces(e.target.checked)} />
             显示棋子
           </label>
-          {pieces && (
+          {(pieces || mode !== "select") && (
             <div className="swatches" aria-label="玩家颜色">
               {[
                 ["#b95843", "赭红"],
@@ -165,6 +203,7 @@ export function App(): React.JSX.Element {
             </div>
           </dl>
           <p className="controls-hint">中键旋转 · 右键平移 · 滚轮缩放</p>
+          <p className="controls-hint">左键选中 · 空白或 Esc 清除</p>
         </div>
       </aside>
     </main>

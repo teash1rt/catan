@@ -7,6 +7,10 @@ import { assembleBoard } from "./board/assembly.ts";
 import type { AssetLibrary } from "./board/assembly.ts";
 import { createNumbers } from "./board/numbers.ts";
 import { BoardCamera, bindCameraInput } from "./board/camera.ts";
+import { BoardInteraction } from "./BoardInteraction.tsx";
+import type { BoardSelection } from "./BoardInteraction.tsx";
+import type { InteractionMode } from "./board/interaction.ts";
+import type { HighlightPalette } from "./board/palettes.ts";
 
 export type RenderStats = {
   calls: number;
@@ -23,6 +27,9 @@ type Props = {
   tileGap: number;
   reset: number;
   onStats: (stats: RenderStats) => void;
+  mode: InteractionMode;
+  onSelection: (selection: BoardSelection) => void;
+  palette: HighlightPalette;
 };
 
 function Models({
@@ -143,6 +150,7 @@ export function BoardScene(props: Props): React.JSX.Element {
       <directionalLight position={[12, 10, -8]} intensity={1.0} color="#dfedff" />
       <Models {...props} />
       <Camera reset={props.reset} />
+      <BoardInteraction key={`${props.config.seed}/${props.mode}`} {...props} />
       <Metrics onStats={props.onStats} />
     </Canvas>
   );
